@@ -168,6 +168,42 @@ def standaryzuj_tekst(df, raport, kolumna, mapa, nazwa_w_raporcie):
     raport[f"{nazwa_w_raporcie}_nierozpoznane"] = nierozpoznane
     return df
 
+def czysc_sprzedawcow(df, raport):
+    # 1. Spacje wokol nazwiska: "  Nowak " -> "Nowak". Inaczej ten sam
+    #    sprzedawca liczylby sie jako dwoch roznych w podsumowaniu.
+    df["sprzedawca"] = df["sprzedawca"].str.strip()
+
+    # 2. Puste pola: nie zgadujemy, kto to byl (nie zmyslamy nazwiska).
+    #    Wpisujemy "Nieznany" - transakcja jest prawdziwa (ma date, produkt,
+    #    ilosc), brakuje tylko przypisania do osoby. Usuniecie wiersza
+    #    zgubiloby realna sprzedaz. Pusty string i NaN traktujemy tak samo.
+    puste = df["sprzedawca"].isna() | (df["sprzedawca"] == "")
+    raport["sprzedawca_brak"] = int(puste.sum())
+    df["sprzedawca"] = df["sprzedawca"].replace("", pd.NA).fillna("Nieznany")
+    return df
+
+
+def przelicz_wartosc(df, raport):
+    # wartosc to wielkosc POCHODNA: powinna wynikac z ilosc * cena.
+    # Czesc wierszy ma wartosc niezgodna - traktujemy ilosc i cene jako
+    # zrodlo prawdy (dane pierwotne) i przeliczamy wartosc od nowa.
+    # (W realnej firmie: uzgodnic z biznesem, ktore pole jest "prawda".)
+    df["wartosc"] = pd.to_numeric(df["wartosc"], errors="coerce")
+    poprawna = (df["ilosc"] * df["cena_jednostkowa"]).round(2)
+
+    # ile wartosci sie nie zgadzalo (z tolerancja na bledy zaokraglen)?
+    # porownujemy tylko tam, gdzie da sie policzyc (cena nie jest pusta).
+    da_sie = df["cena_jednostkowa"].notna()
+    niezgodne = (da_sie & ((df["wartosc"] - poprawna).abs() > 0.01)).sum()
+    raport["wartosc_niezgodna"] = int(niezgodne)
+
+    # przeliczamy wartosc; tam gdzie cena pusta -> wartosc zostaje NaN
+    df["wartosc"] = poprawna
+
+    # ile wartosci nie da sie policzyc, bo brakuje ceny?
+    raport["wartosc_bez_ceny"] = int(df["wartosc"].isna().sum())
+    return df
+
 if __name__ == "__main__":
     raport = {}  # tu zbieramy statystyki napraw na potrzeby raportu jakosci
     df = wczytaj_dane()
@@ -209,4 +245,11 @@ if __name__ == "__main__":
     for r in nierozpoznane:
         print(f"  Wartosc '{r['wartosc']}' ({r['liczba']}x) nie pasuje. "
               f"Otworz plik '{r['plik']}', znajdz '{r['wartosc']}' (Ctrl+F) i popraw.")
+        
+    df = czysc_sprzedawcow(df, raport)
+    df = przelicz_wartosc(df, raport)
+    print("\n--- KLOCEK 5a: sprzedawcy + wartosc ---")
+    print(f"Pustych pol sprzedawcy (-> 'Nieznany'): {raport['sprzedawca_brak']}")
+    print(f"Niezgodnych wartosci (przeliczone):     {raport['wartosc_niezgodna']}")
+    print(f"Wartosci bez ceny (zostaja puste):      {raport['wartosc_bez_ceny']}")
 
