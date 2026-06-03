@@ -6,6 +6,32 @@ import os
 OCZEKIWANE_KOLUMNY = {"data_sprzedazy", "region", "sprzedawca",
                       "produkt", "ilosc", "cena_jednostkowa", "wartosc"}
 
+# Mapy standaryzacji - klucze pisane MALYMI literami, bo mapujemy po normalizacji.
+MAPA_REGIONOW = {
+    "dolnoslaskie": "Dolnoslaskie",
+    "dolny slask": "Dolnoslaskie",
+    "malopolska": "Malopolskie",
+    "malopolskie": "Malopolskie",
+    "mazowieckie": "Mazowieckie",
+    "mazowsze": "Mazowieckie",
+    "pomorskie": "Pomorskie",
+    "pomorze": "Pomorskie",
+    "wielkopolska": "Wielkopolskie",
+    "wielkopolskie": "Wielkopolskie",
+    "wlkp": "Wielkopolskie",
+}
+
+MAPA_PRODUKTOW = {
+    "baton czekol. 50g": "Baton czekoladowy 50g",
+    "baton czekoladowy 50g": "Baton czekoladowy 50g",
+    "chipsy papryk. 150g": "Chipsy paprykowe 150g",
+    "chipsy paprykowe 150g": "Chipsy paprykowe 150g",
+    "piwo jasne 0.5l": "Piwo jasne 0.5L",
+    "sok pomaranczowy 1 l": "Sok pomaranczowy 1L",
+    "sok pomaranczowy 1l": "Sok pomaranczowy 1L",
+    "woda gaz. 1.5l": "Woda gazowana 1.5L",
+    "woda gazowana 1.5l": "Woda gazowana 1.5L",
+}
 # Wczytanie i polaczenie wszystkich plikow z folderu ---
 
 def wczytaj_dane(folder="dane_surowe"):
@@ -110,6 +136,33 @@ def oznacz_duplikaty(df, raport):
     raport["duplikaty_do_weryfikacji"] = int(df["potencjalny_duplikat"].sum())
     return df
 
+# --- KLOCEK 4b: standaryzacja tekstu (regiony, produkty) ---
+
+def _normalizuj(seria):
+    # Wspolna normalizacja tekstu: usun spacje z brzegow, na male litery,
+    # wielokrotne spacje wewnatrz -> pojedyncza. To skleja warianty rozniace
+    # sie TYLKO formatowaniem, zanim w ogole siegniemy po mape.
+    return (seria.str.strip()
+                 .str.lower()
+                 .str.replace(r"\s+", " ", regex=True))
+
+
+def standaryzuj_tekst(df, raport, kolumna, mapa, nazwa_w_raporcie):
+    znorm = _normalizuj(df[kolumna])
+
+    # NIEROZPOZNANE: znormalizowane wartosci, ktorych nie ma w mapie.
+    # ~znorm.isin(mapa) = "nie wystepuje wsrod kluczy mapy". dropna, bo
+    # pustych pol nie traktujemy tu jako bledu nazwy.
+    maska_nieznane = ~znorm.isin(mapa.keys()) & znorm.notna()
+    nierozpoznane = sorted(znorm[maska_nieznane].unique())
+    raport[f"{nazwa_w_raporcie}_nierozpoznane"] = nierozpoznane
+
+    # .map() zamienia kazda znormalizowana wartosc na docelowa z mapy.
+    # Wartosci spoza mapy daja NaN - wiec zostawiamy dla nich ORYGINAL
+    # (.fillna(df[kolumna])), zeby niczego nie zgubic.
+    df[kolumna] = znorm.map(mapa).fillna(df[kolumna])
+    return df
+
 if __name__ == "__main__":
     raport = {}  # tu zbieramy statystyki napraw na potrzeby raportu jakosci
     df = wczytaj_dane()
@@ -137,4 +190,12 @@ if __name__ == "__main__":
     print("\n--- KLOCEK 4a: duplikaty ---")
     print(f"Wierszy oznaczonych jako potencjalny duplikat: {raport['duplikaty_do_weryfikacji']}")
     print("(NIE usuniete - do weryfikacji przez czlowieka)")
+
+    df = standaryzuj_tekst(df, raport, "region", MAPA_REGIONOW, "region")
+    df = standaryzuj_tekst(df, raport, "produkt", MAPA_PRODUKTOW, "produkt")
+    print("\n--- KLOCEK 4b: standaryzacja tekstu ---")
+    print(f"Regiony po standaryzacji: {sorted(df['region'].dropna().unique())}")
+    print(f"Produkty po standaryzacji: {sorted(df['produkt'].dropna().unique())}")
+    print(f"Regiony nierozpoznane: {raport['region_nierozpoznane'] or 'brak'}")
+    print(f"Produkty nierozpoznane: {raport['produkt_nierozpoznane'] or 'brak'}")
 
