@@ -62,6 +62,53 @@ def czysc_daty(df, raport):
     raport["daty_przeksztalcone"] = int(przeksztalcone)
     return df
 
+def czysc_liczby(df, raport):
+    # CENA: w niektorych wierszach to "4,29" (tekst z przecinkiem) zamiast 4.29.
+    # Krok 1: zamien przecinek na kropke. .str.replace dziala na calej kolumnie.
+    # Krok 2: pd.to_numeric z errors="coerce" - zamienia tekst na liczbe,
+    #         a czego sie nie da (np. puste pole) -> NaN, zamiast wywalic skrypt.
+    cena_przed = df["cena_jednostkowa"].copy()
+    df["cena_jednostkowa"] = df["cena_jednostkowa"].str.replace(",", ".", regex=False)
+    df["cena_jednostkowa"] = pd.to_numeric(df["cena_jednostkowa"], errors="coerce")
+
+    # ile cen bylo zapisanych z przecinkiem (czyli wymagalo naprawy)?
+    raport["cena_przecinek"] = int(cena_przed.str.contains(",", na=False).sum())
+    # ile cen jest pustych (NaN) po konwersji?
+    raport["cena_pusta"] = int(df["cena_jednostkowa"].isna().sum())
+
+    # ILOSC: tekst -> liczba.
+    df["ilosc"] = pd.to_numeric(df["ilosc"], errors="coerce")
+
+    # UJEMNE ILOSCI: -112 sztuk to blad (nie da sie sprzedac minus 112).
+    # Zakladamy, ze to literowka znaku i bierzemy wartosc bezwzgledna.
+    # (Inna mozliwa interpretacja: to ZWROTY towaru - wtedy nalezaloby je
+    #  liczyc osobno, nie prostowac znaku. Ktora wersja jest poprawna,
+    #  uzgodniloby sie z biznesem. Tu zakladam literowke.)
+    ujemne = (df["ilosc"] < 0).sum()
+    raport["ilosc_ujemna"] = int(ujemne)
+    df["ilosc"] = df["ilosc"].abs()
+
+    return df
+
+# Oznaczanie potencjalnych duplikatow bez usuwania (do weryfikacji przez czlowieka)
+
+def oznacz_duplikaty(df, raport):
+    # Nie usuwamy duplikatow, bo bez znacznika czasu / ID transakcji nie da sie
+    # odroznic technicznej powtorki od dwoch prawdziwych identycznych transakcji
+    # tego samego dnia. Zamiast kasowac (i ryzykowac utrate realnej sprzedazy),
+    # OZNACZAMY je do weryfikacji przez czlowieka.
+
+    # porownujemy po oryginalnych kolumnach danych - bez 'plik_zrodlowy',
+    # ktore sami dorzucilismy (ta sama transakcja moglaby trafic do 2 plikow).
+    kolumny_danych = [k for k in df.columns if k != "plik_zrodlowy"]
+
+    # keep="first" = pierwszy wiersz z powtorki traktujemy jako oryginal (zapis
+    # faktu, ktory sie wydarzyl), a oznaczamy dopiero KOLEJNE wystapienia -
+    # czyli realnych "kandydatow do usuniecia" dla analityka.
+    df["potencjalny_duplikat"] = df.duplicated(subset=kolumny_danych, keep="first")
+
+    raport["duplikaty_do_weryfikacji"] = int(df["potencjalny_duplikat"].sum())
+    return df
 
 if __name__ == "__main__":
     raport = {}  # tu zbieramy statystyki napraw na potrzeby raportu jakosci
@@ -78,3 +125,16 @@ if __name__ == "__main__":
     print(f"\nTyp kolumny daty: {df['data_sprzedazy'].dtype}  (datetime, nie tekst!)")
     print(f"Dat przeksztalconych z innego formatu: {raport['daty_przeksztalcone']}")
     print(f"Dat niesparsowanych (zepsutych): {raport['daty_niesparsowane']}")
+
+    df = czysc_liczby(df, raport)
+    print("\n--- KLOCEK 3: liczby ---")
+    print(f"Cen naprawionych (przecinek -> kropka): {raport['cena_przecinek']}")
+    print(f"Cen pustych (do uzupelnienia pozniej):  {raport['cena_pusta']}")
+    print(f"Ujemnych ilosci naprawionych:           {raport['ilosc_ujemna']}")
+    print(f"\nTyp ceny: {df['cena_jednostkowa'].dtype}, typ ilosci: {df['ilosc'].dtype}")
+
+    df = oznacz_duplikaty(df, raport)
+    print("\n--- KLOCEK 4a: duplikaty ---")
+    print(f"Wierszy oznaczonych jako potencjalny duplikat: {raport['duplikaty_do_weryfikacji']}")
+    print("(NIE usuniete - do weryfikacji przez czlowieka)")
+
