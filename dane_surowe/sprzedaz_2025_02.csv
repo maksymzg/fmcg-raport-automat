@@ -1,0 +1,126 @@
+data_sprzedazy,region,sprzedawca,produkt,ilosc,cena_jednostkowa,wartosc
+10.02.2025,Dolnoslaskie ,Nowak,Sok pomaranczowy 1L,69,5.49,378.81
+06.02.2025,Malopolska,Wojcik,Chipsy paprykowe 150g,23,6.99,160.77
+05.02.2025,Wielkopolska,Kowalski,Chipsy paprykowe 150g,69,"6,99",482.31
+03.02.2025,Pomorskie,  Kowalski ,Baton czekoladowy 50g,74,2.99,221.26
+20.02.2025,Malopolska,  Nowak ,Baton czekoladowy 50g,98,2.99,293.02
+07.02.2025,Wielkopolska,   ,Piwo jasne 0.5L,41,4.29,175.89
+11.02.2025,Wielkopolska,Wojcik,Sok pomaranczowy 1L,71,5.49,389.79
+09.02.2025,Wielkopolska,Wisniewski,Piwo jasne 0.5L,117,4.29,501.93
+03.02.2025,wielkopolskie,,Piwo jasne 0.5L,97,"4,29",416.13
+04.02.2025,Malopolska,Wisniewski,Baton czekoladowy 50g,83,2.99,248.17
+17.02.2025,Mazowieckie,Wisniewski,Baton czekoladowy 50g,94,2.99,281.06
+03.02.2025,Dolnoslaskie,Wisniewski,Woda gazowana 1.5L,57,2.49,141.93
+27.02.2025,Dolnoslaskie,Nowak,Piwo  jasne 0.5L,87,4.29,373.23
+21.02.2025,dolnoslaskie,Nowak,Woda gazowana 1.5L,-18,2.49,44.82
+21.02.2025,Pomorskie,Wojcik,Baton czekoladowy 50g,42,2.99,125.58
+23.02.2025,Mazowieckie,Wisniewski,Piwo jasne 0.5L,97,4.29,416.13
+04.02.2025,Dolnoslaskie,Lewandowska,Woda gazowana 1.5L,61,2.49,151.89
+21.02.2025,Mazowieckie,Wisniewski,Sok pomaranczowy 1L,67,"5,49",367.83
+23.02.2025,Wielkopolska,,Sok pomaranczowy 1L,-50,5.49,274.5
+15.02.2025,pomorskie,Wisniewski,Woda gazowana 1.5L,63,2.49,156.87
+09.02.2025,Wielkopolska,Nowak,Piwo jasne 0.5L,97,4.29,416.13
+05.02.2025,Dolnoslaskie ,Wojcik,Chipsy paprykowe 150g,90,6.99,873.79
+15.02.2025,Mazowieckie,Wojcik,Woda gazowana 1.5L,-99,2.49,246.51
+23.02.2025,Pomorskie,Wojcik,Piwo jasne 0.5L,117,4.29,501.93
+12.02.2025,Mazowieckie,Kowalski,Chipsy paprykowe 150g,-77,"6,99",538.23
+28.02.2025,Dolny Slask,Lewandowska,Chipsy paprykowe 150g,51,6.99,356.49
+01.02.2025,Dolnoslaskie,Wisniewski,Woda gazowana 1.5L,30,2.49,74.7
+21.02.2025,Wielkopolska,,Baton czekoladowy 50g,82,2.99,245.18
+13.02.2025,Pomorskie,Nowak,Piwo jasne 0.5L,51,"4,29",218.79
+14.02.2025,wielkopolskie,Nowak,Chipsy paprykowe 150g,107,6.99,747.93
+04.02.2025,Dolnoslaskie,Lewandowska,Chipsy paprykowe 150g,92,6.99,643.08
+16.02.2025,Malopolska,Lewandowska,Chipsy paprykowe 150g,64,6.99,447.36
+01.02.2025,Mazowieckie,  Nowak ,Woda gazowana 1.5L,87,2.49,216.63
+08.02.2025,Mazowieckie,Wisniewski,Sok pomaranczowy 1L,78,5.49,428.22
+12.02.2025,Mazowieckie,Kowalski,Sok pomaranczowy 1L,28,5.49,153.72
+04.02.2025,Mazowieckie,Nowak,Piwo jasne 0.5L,17,4.29,72.93
+28.02.2025, Mazowieckie,Kowalski,Woda gazowana 1.5L,78,2.49,194.22
+06.02.2025,Wielkopolska,Nowak,Sok pomaranczowy 1L,109,5.49,598.41
+11.02.2025,Mazowieckie,Wojcik,Sok pomaranczowy 1L,34,5.49,210.57
+07.02.2025,Pomorskie,Wisniewski,Piwo jasne 0.5L,72,4.29,308.88
+11.02.2025,Dolnoslaskie,  Lewandowska ,Piwo jasne 0.5L,74,"4,29",317.46
+13.02.2025,Wielkopolska,Kowalski,Piwo jasne 0.5L,69,4.29,296.01
+06.02.2025,Dolnoslaskie,Nowak,Woda gazowana 1.5L,63,2.49,156.87
+09.02.2025,Pomorskie,Nowak,Baton czekoladowy 50g,-14,2.99,41.86
+19.02.2025,Mazowieckie,Wojcik,Woda gazowana 1.5L,32,2.49,79.68
+06.02.2025,Dolnoslaskie,Wojcik,Piwo jasne 0.5L,17,"4,29",72.93
+03.02.2025,Dolnoslaskie,Lewandowska,Baton czekoladowy 50g,42,2.99,125.58
+13.02.2025,Mazowieckie,Wisniewski,Baton czekoladowy 50g,23,2.99,68.77
+22.02.2025,Dolnoslaskie,Lewandowska,Piwo jasne 0.5L,86,4.29,368.94
+13.02.2025,Dolnoslaskie,Wojcik,Sok pomaranczowy 1L,53,5.49,290.97
+26.02.2025,Mazowieckie,Kowalski,Woda gazowana 1.5L,105,2.49,261.45
+08.02.2025,Malopolska,Wojcik,Baton czekoladowy 50g,106,2.99,316.94
+19.02.2025,Mazowieckie,Wojcik,Woda gazowana 1.5L,32,2.49,79.68
+05.02.2025,Pomorskie,,Woda gaz. 1.5L,64,2.49,179.48
+16.02.2025,Pomorskie,Wisniewski,Woda gazowana 1.5L,109,"2,49",271.41
+21.02.2025,Mazowsze,,Baton czekoladowy 50g,34,2.99,101.66
+26.02.2025,Mazowieckie,Lewandowska,Chipsy paprykowe 150g,64,6.99,447.36
+14.02.2025,Dolnoslaskie,Nowak,Woda gazowana 1.5L,43,2.49,107.07
+23.02.2025,Wielkopolska,Lewandowska,Piwo jasne 0.5L,107,4.29,459.03
+28.02.2025,Malopolskie,  Wojcik ,Chipsy paprykowe 150g,99,6.99,692.01
+23.02.2025,Malopolska,Lewandowska,Woda gazowana 1.5L,96,2.49,239.04
+09.02.2025,Malopolska,Lewandowska,Chipsy paprykowe 150g,45,6.99,314.55
+12.02.2025,Pomorskie,  Wojcik ,Piwo jasne 0.5L,65,4.29,278.85
+02.02.2025,Wielkopolska,Nowak,Woda gazowana 1.5L,73,,181.77
+23.02.2025,Mazowieckie,Wisniewski,Piwo jasne 0.5L,47,"4,29",201.63
+17.02.2025,Malopolska,Kowalski,Chipsy paprykowe 150g,72,6.99,503.28
+26.02.2025,mazowieckie,Nowak,sok pomaranczowy 1l,19,5.49,104.31
+18.02.2025,Mazowieckie,Kowalski,Sok pomaranczowy 1L,102,5.49,559.98
+07.02.2025,Dolnoslaskie,,Sok pomaranczowy 1L,75,5.49,411.75
+02.02.2025,Pomorskie,Wisniewski,Woda gazowana 1.5L,16,2.49,39.84
+04.02.2025,Malopolska,Wisniewski,Chipsy paprykowe 150g,94,6.99,657.06
+27.02.2025,Mazowieckie,  Nowak ,Piwo jasne 0.5L,59,4.29,253.11
+07.02.2025,Pomorze,Lewandowska,Baton czekoladowy 50g,70,2.99,209.3
+17.02.2025,Dolny Slask,Lewandowska,Piwo jasne 0.5L,69,4.29,296.01
+21.02.2025,Malopolska,Wojcik,Chipsy paprykowe 150g,9,6.99,62.91
+25.02.2025,Dolnoslaskie,Nowak,Woda gazowana 1.5L,23,2.49,57.27
+20.02.2025,Dolnoslaskie,Kowalski,Sok pomaranczowy 1L,116,5.49,636.84
+16.02.2025,Mazowieckie,Kowalski,Chipsy paprykowe 150g,84,6.99,587.16
+08.02.2025,POMORSKIE,  Kowalski ,woda gazowana 1.5l,13,2.49,32.37
+02.02.2025,Wielkopolska,Kowalski,Baton czekoladowy 50g,83,2.99,248.17
+19.02.2025,Pomorskie,Nowak,Chipsy paprykowe 150g,44,6.99,307.56
+26.02.2025,Dolnoslaskie,Wisniewski,Sok pomaranczowy 1L,37,5.49,203.13
+25.02.2025,Pomorskie,Wojcik,Sok pomaranczowy 1L,29,5.49,159.21
+08.02.2025,Wielkopolska,Lewandowska,Baton czekoladowy 50g,79,2.99,236.21
+10.02.2025,Malopolska,Lewandowska,Baton czekoladowy 50g,23,2.99,68.77
+18.02.2025,Wielkopolska,Nowak,Sok pomaranczowy 1L,42,5.49,230.58
+12.02.2025,Pomorskie,Kowalski,Baton czekoladowy 50g,59,"2,99",188.96
+11.02.2025,Mazowieckie,Wojcik,Sok pomaranczowy 1L,34,5.49,210.57
+07.02.2025,Dolny Slask,Kowalski,Woda gaz. 1.5L,-14,2.49,34.86
+26.02.2025,Dolnoslaskie,Wisniewski,Sok pomaranczowy 1L,75,5.49,411.75
+07.02.2025,Pomorskie,Wisniewski,Piwo jasne 0.5L,72,4.29,308.88
+16.02.2025,Dolnoslaskie,,Sok pomaranczowy 1L,93,5.49,510.57
+09.02.2025,Dolnoslaskie,Kowalski,Sok pomaranczowy 1L,89,5.49,488.61
+20.02.2025,Wielkopolska,Nowak,Baton czekoladowy 50g,22,2.99,65.78
+01.02.2025,Pomorskie,Kowalski,Sok pomaranczowy 1L,-56,5.49,307.44
+22.02.2025,Pomorskie,  Wojcik ,Baton czekol. 50g,87,"2,99",260.13
+12.02.2025,Malopolska,Kowalski,Baton czekoladowy 50g,29,2.99,86.71
+03.02.2025,Mazowieckie,Wojcik,piwo jasne 0.5l,67,4.29,287.43
+22.02.2025,Dolnoslaskie,Wisniewski,Baton czekoladowy 50g,25,2.99,74.75
+10.02.2025,Dolnoslaskie,Wisniewski,Piwo  jasne 0.5L,63,4.29,270.27
+15.02.2025,malopolskie,Kowalski,Chipsy paprykowe 150g,46,6.99,321.54
+11.02.2025,Pomorze,  Wisniewski ,Baton czekoladowy 50g,23,2.99,68.77
+24.02.2025,Mazowieckie,Nowak,Baton czekoladowy 50g,22,2.99,65.78
+08.02.2025,Pomorskie,Wojcik,Woda gazowana 1.5L,103,2.49,256.47
+13.02.2025,Wielkopolska,Kowalski,Piwo jasne 0.5L,69,4.29,296.01
+23.02.2025,Wielkopolska,Kowalski,Baton czekoladowy 50g,92,2.99,275.08
+25.02.2025,Dolnoslaskie,Wojcik,Chipsy paprykowe 150g,38,6.99,265.62
+23.02.2025,Mazowieckie,Nowak,Piwo jasne 0.5L,81,4.29,347.49
+21.02.2025,Wielkopolskie ,  Wisniewski ,Baton czekoladowy 50g,50,"2,99",149.5
+13.02.2025,Dolnoslaskie ,Lewandowska,Piwo jasne 0.5L,71,4.29,304.59
+07.02.2025,Dolnoslaskie,Wisniewski,Sok pomaranczowy 1L,111,5.49,609.39
+24.02.2025,Dolnoslaskie,Wisniewski,Chipsy paprykowe  150g,26,6.99,181.74
+24.02.2025,Wielkopolska,Wojcik,Piwo jasne 0.5L,30,4.29,128.7
+24.02.2025,Pomorskie,Nowak,Woda gazowana 1.5L,35,2.49,87.15
+25.02.2025,Dolnoslaskie,Lewandowska,Baton czekoladowy 50g,101,2.99,301.99
+03.02.2025,malopolskie,Wojcik,Sok pomaranczowy 1L,13,5.49,84.49
+04.02.2025,Wielkopolska,,woda gazowana 1.5l,96,2.49,239.04
+04.02.2025,Mazowieckie,Kowalski,Chipsy paprykowe 150g,88,6.99,615.12
+17.02.2025,Pomorskie,Nowak,Piwo jasne 0.5L,14,4.29,60.06
+18.02.2025,MALOPOLSKA,Wisniewski,Sok pomaranczowy 1L,50,5.49,380.01
+19.02.2025,Pomorskie,Wisniewski,Baton czekoladowy 50g,46,2.99,137.54
+05.02.2025,Pomorskie,Wisniewski,Sok pomaranczowy 1L,-68,5.49,373.32
+04.02.2025, Mazowieckie,Wisniewski,Piwo jasne 0.5L,64,4.29,274.56
+13.02.2025,Wielkopolska,Kowalski,Piwo jasne 0.5L,69,4.29,296.01
+02.02.2025,Pomorskie,Wisniewski,Piwo jasne 0.5L,109,4.29,467.61

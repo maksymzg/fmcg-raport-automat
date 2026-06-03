@@ -1,0 +1,15 @@
+# srodowisko wirtualne
+venv/
+.venv/
+
+# cache Pythona
+__pycache__/
+*.pyc
+
+# wygenerowane raporty (nie commitujemy outputow)
+raporty/
+*.xlsx
+
+# system / edytor
+.DS_Store
+.vscode/
