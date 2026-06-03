@@ -71,6 +71,12 @@ def _parsuj_daty(seria):
     # jest jednoznaczna, a dayfirst psulby ja (czytalby dzien jako miesiac).
     # Europejskie (DD.MM.RRRR / DD/MM/RRRR) parsujemy Z dayfirst i format="mixed",
     # bo dzien jest pierwszy, a separatory bywaja rozne (kropka i ukosnik).
+    # ZALOZENIE: daty europejskie sa w formacie dzien-pierwszy (DD.MM / DD/MM),
+    # bo dane pochodza z polskiej firmy. Pojedynczej dwuznacznej daty (np.
+    # "03-04-2023") NIE da sie rozstrzygnac - nie wiadomo, czy to format EU
+    # (3 kwietnia) czy US (4 marca). Przy danych z mieszanych zrodel US/EU
+    # nalezaloby wykrywac format per plik albo wymusic ISO na wejsciu.
+    # Patrz: README, sekcja "Zalozenia i ograniczenia".
     iso = seria.str.match(r"^\d{4}-").fillna(False)
     daty_iso = pd.to_datetime(seria.where(iso), format="ISO8601", errors="coerce")
     daty_eu = pd.to_datetime(seria.where(~iso), format="mixed", dayfirst=True, errors="coerce")

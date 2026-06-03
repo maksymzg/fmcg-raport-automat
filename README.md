@@ -69,6 +69,25 @@ fmcg-raport-automat/
 
 Python (pandas), openpyxl. Bez baz danych — celowo lekkie, uruchamialne lokalnie.
 
+## Założenia i ograniczenia
+
+Narzędzie podejmuje kilka świadomych założeń biznesowych. W realnym wdrożeniu
+uzgodniłoby się je z zespołem, który zna źródło danych:
+
+- **Format dat:** zakładany jest europejski zapis dzień-pierwszy (`DD.MM.RRRR`,
+  `DD/MM/RRRR`), bo dane pochodzą z polskiej firmy. Pojedynczej dwuznacznej daty
+  (np. `03-04-2023`) nie da się rozstrzygnąć między formatem europejskim a
+  amerykańskim. Przy danych z mieszanych źródeł US/EU należałoby wykrywać format
+  per plik albo wymusić ISO (`RRRR-MM-DD`) na wejściu.
+- **Ujemne ilości** są traktowane jako literówka znaku (brana wartość bezwzględna).
+  Alternatywna interpretacja — zwroty towaru — wymagałaby liczenia osobno.
+- **Niezgodna wartość transakcji** jest przeliczana jako `ilość × cena`, czyli
+  ilość i cena traktowane są jako źródło prawdy (dane pierwotne).
+- **Duplikaty nie są usuwane**, tylko oznaczane do weryfikacji — bez znacznika
+  czasu lub ID transakcji nie da się odróżnić technicznej powtórki od dwóch
+  prawdziwych identycznych transakcji tego samego dnia.
+- **Puste pola sprzedawcy** uzupełniane są wartością `Nieznany` (nie zgadujemy
+  nazwiska), a transakcja pozostaje w danych, bo sama sprzedaż jest prawdziwa.
 ## Status / roadmap
 
 - [x] Wczytanie i konsolidacja wielu plików
