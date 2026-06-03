@@ -66,26 +66,22 @@ def wczytaj_dane(folder="dane_surowe"):
 
 # Czyszczenie dat (3 formaty -> jeden prawdziwy typ daty) ---
 
+def _parsuj_daty(seria):
+    # ISO (zaczyna sie od "RRRR-") parsujemy BEZ dayfirst - kolejnosc rok-miesiac-dzien
+    # jest jednoznaczna, a dayfirst psulby ja (czytalby dzien jako miesiac).
+    # Europejskie (DD.MM.RRRR / DD/MM/RRRR) parsujemy Z dayfirst i format="mixed",
+    # bo dzien jest pierwszy, a separatory bywaja rozne (kropka i ukosnik).
+    iso = seria.str.match(r"^\d{4}-").fillna(False)
+    daty_iso = pd.to_datetime(seria.where(iso), format="ISO8601", errors="coerce")
+    daty_eu = pd.to_datetime(seria.where(~iso), format="mixed", dayfirst=True, errors="coerce")
+    return daty_iso.fillna(daty_eu)
+
+
 def czysc_daty(df, raport):
-    # Mamy 3 formaty w 3 plikach: 2025-01-21 / 21.02.2025 / 21/03/2025.
-    # pd.to_datetime z format="mixed" - rozpoznanie kazdego formatu 
-    # KAZDEGO wiersza z osobna, a dayfirst=True mowi: gdy zobaczysz
-    # "21.02.2025", potraktuj 21 jako DZIEN (europejski zapis), nie miesiac.
-    # errors="coerce" = jesli czegos nie da sie sparsowac, wstaw NaT (pusta
-    # data) zamiast wywalic caly skrypt. Dzieki temu mozemy potem policzyc, ile dat bylo zepsutych.
     przed = df["data_sprzedazy"].copy()
-    df["data_sprzedazy"] = pd.to_datetime(
-        df["data_sprzedazy"], format="mixed", dayfirst=True, errors="coerce"
-    )
-
-    # ile dat nie dalo sie sparsowac (czyli bylo realnie zepsutych)?
-    niesparsowane = df["data_sprzedazy"].isna().sum()
-    raport["daty_niesparsowane"] = int(niesparsowane)
-
-    # ile dat NIE bylo w formacie docelowym (czyli wymagalo konwersji)?
-    # prosty wskaznik: ile oryginalnych tekstow nie zaczyna sie od "2025-"
-    przeksztalcone = (~przed.str.startswith("2025-")).sum()
-    raport["daty_przeksztalcone"] = int(przeksztalcone)
+    df["data_sprzedazy"] = _parsuj_daty(df["data_sprzedazy"])
+    raport["daty_niesparsowane"] = int(df["data_sprzedazy"].isna().sum())
+    raport["daty_przeksztalcone"] = int((~przed.str.startswith("2025-")).sum())
     return df
 
 def czysc_liczby(df, raport):
@@ -219,6 +215,9 @@ if __name__ == "__main__":
     print(f"\nTyp kolumny daty: {df['data_sprzedazy'].dtype}  (datetime, nie tekst!)")
     print(f"Dat przeksztalconych z innego formatu: {raport['daty_przeksztalcone']}")
     print(f"Dat niesparsowanych (zepsutych): {raport['daty_niesparsowane']}")
+    print("Rozklad miesiecy (powinny byc tylko 1,2,3):",
+          sorted(df["data_sprzedazy"].dt.month.dropna().unique().tolist()))
+    print("Niesparsowane daty:", raport["daty_niesparsowane"])
 
     df = czysc_liczby(df, raport)
     print("\n--- KLOCEK 3: liczby ---")
