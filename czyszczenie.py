@@ -150,17 +150,22 @@ def _normalizuj(seria):
 def standaryzuj_tekst(df, raport, kolumna, mapa, nazwa_w_raporcie):
     znorm = _normalizuj(df[kolumna])
 
-    # NIEROZPOZNANE: znormalizowane wartosci, ktorych nie ma w mapie.
-    # ~znorm.isin(mapa) = "nie wystepuje wsrod kluczy mapy". dropna, bo
-    # pustych pol nie traktujemy tu jako bledu nazwy.
+    # NIEROZPOZNANE: znormalizowane wartosci spoza mapy.
     maska_nieznane = ~znorm.isin(mapa.keys()) & znorm.notna()
-    nierozpoznane = sorted(znorm[maska_nieznane].unique())
-    raport[f"{nazwa_w_raporcie}_nierozpoznane"] = nierozpoznane
 
-    # .map() zamienia kazda znormalizowana wartosc na docelowa z mapy.
-    # Wartosci spoza mapy daja NaN - wiec zostawiamy dla nich ORYGINAL
-    # (.fillna(df[kolumna])), zeby niczego nie zgubic.
-    df[kolumna] = znorm.map(mapa).fillna(df[kolumna])
+    # Zamiast samej listy wartosci - namiar: dla kazdej nierozpoznanej wartosci
+    # podajemy plik zrodlowy i numery wierszy, zeby analityk trafil do zrodla.
+    nierozpoznane = []
+    for wartosc in sorted(znorm[maska_nieznane].unique()):
+        wiersze = df[maska_nieznane & (znorm == wartosc)]
+        for plik, grupa in wiersze.groupby("plik_zrodlowy"):
+            nierozpoznane.append({
+                "wartosc": wartosc,
+                "plik": plik,
+                "wiersze": grupa.index.tolist(),  # indeksy w polaczonej tabeli
+                "liczba": len(grupa),
+            })
+    raport[f"{nazwa_w_raporcie}_nierozpoznane"] = nierozpoznane
     return df
 
 if __name__ == "__main__":
@@ -196,6 +201,12 @@ if __name__ == "__main__":
     print("\n--- KLOCEK 4b: standaryzacja tekstu ---")
     print(f"Regiony po standaryzacji: {sorted(df['region'].dropna().unique())}")
     print(f"Produkty po standaryzacji: {sorted(df['produkt'].dropna().unique())}")
-    print(f"Regiony nierozpoznane: {raport['region_nierozpoznane'] or 'brak'}")
-    print(f"Produkty nierozpoznane: {raport['produkt_nierozpoznane'] or 'brak'}")
+
+    print("\nNierozpoznane wartosci do poprawienia recznie:")
+    nierozpoznane = raport["region_nierozpoznane"] + raport["produkt_nierozpoznane"]
+    if not nierozpoznane:
+        print("  brak - wszystko rozpoznane")
+    for r in nierozpoznane:
+        print(f"  Wartosc '{r['wartosc']}' ({r['liczba']}x) nie pasuje. "
+              f"Otworz plik '{r['plik']}', znajdz '{r['wartosc']}' (Ctrl+F) i popraw.")
 
