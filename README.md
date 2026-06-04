@@ -9,7 +9,6 @@ danych w Excelu) można sprowadzić do jednego uruchomienia, **z mierzalnym rapo
 jakości danych** na wejściu.
 
 ## Problem
-
 Dane sprzedażowe rzadko przychodzą czyste. Tu mamy trzy miesięczne pliki CSV, każdy
 wyeksportowany w innym formacie, z typowymi błędami:
 
@@ -98,3 +97,9 @@ uzgodniłoby się je z zespołem, który zna źródło danych:
 - [ ] Raport jakości danych
 - [ ] Eksport do sformatowanego Excela
 - [ ] Interfejs dla użytkownika nietechnicznego (planowane)
+
+# Decyzje biznesowe
+ - ujemne ilosci (obsluga)
+ - usuwanie ID
+ - Daty rozne roadzje
+ - nieznany sprzedawca

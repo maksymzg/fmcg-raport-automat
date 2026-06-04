@@ -32,7 +32,7 @@ MAPA_PRODUKTOW = {
     "woda gaz. 1.5l": "Woda gazowana 1.5L",
     "woda gazowana 1.5l": "Woda gazowana 1.5L",
 }
-# Wczytanie i polaczenie wszystkich plikow z folderu ---
+# Wczytanie i polaczenie wszystkich plikow z folderu
 
 def wczytaj_dane(folder="dane_surowe"):
     # Kod służy do znalezienia wszystkich plików z rozszerzeniem .csv,
@@ -48,12 +48,13 @@ def wczytaj_dane(folder="dane_surowe"):
         # WALIDACJA: sprawdzamy kolumny KAZDEGO pliku tuz po wczytaniu.
         kolumny_pliku = set(df.columns)
         if kolumny_pliku != OCZEKIWANE_KOLUMNY:
-            brakujace = OCZEKIWANE_KOLUMNY - kolumny_pliku   # sa oczekiwane, nie ma ich w pliku
-            nadmiarowe = kolumny_pliku - OCZEKIWANE_KOLUMNY  # sa w pliku, nie powinny byc
+            brakujace = OCZEKIWANE_KOLUMNY - kolumny_pliku
+            nadmiarowe = kolumny_pliku - OCZEKIWANE_KOLUMNY
             raise ValueError(
                 f"Plik {sciezka} ma zle kolumny.\n"
-                f"  Zamień: {nadmiarowe or 'brak'}"
-                f"  Na:  {brakujace or 'brak'}\n"
+                f"  Brakuje:    {brakujace or 'brak'}\n"
+                f"  Nadmiarowe: {nadmiarowe or 'brak'}\n"
+                f"  Popraw naglowki w pliku, aby pasowaly do oczekiwanych kolumn."
             )
         df["plik_zrodlowy"] = os.path.basename(sciezka)
         ramki.append(df)
@@ -67,21 +68,17 @@ def wczytaj_dane(folder="dane_surowe"):
 # Czyszczenie dat (3 formaty -> jeden prawdziwy typ daty) ---
 
 def _parsuj_daty(seria):
-    # ISO (zaczyna sie od "RRRR-") parsujemy BEZ dayfirst - kolejnosc rok-miesiac-dzien
-    # jest jednoznaczna, a dayfirst psulby ja (czytalby dzien jako miesiac).
-    # Europejskie (DD.MM.RRRR / DD/MM/RRRR) parsujemy Z dayfirst i format="mixed",
-    # bo dzien jest pierwszy, a separatory bywaja rozne (kropka i ukosnik).
-    # ZALOZENIE: daty europejskie sa w formacie dzien-pierwszy (DD.MM / DD/MM),
-    # bo dane pochodza z polskiej firmy. Pojedynczej dwuznacznej daty (np.
-    # "03-04-2023") NIE da sie rozstrzygnac - nie wiadomo, czy to format EU
-    # (3 kwietnia) czy US (4 marca). Przy danych z mieszanych zrodel US/EU
-    # nalezaloby wykrywac format per plik albo wymusic ISO na wejsciu.
-    # Patrz: README, sekcja "Zalozenia i ograniczenia".
+    # Parsuje daty z trzech formatow (ISO, DD.MM, DD/MM) do jednego typu datetime.
+    # ISO (RRRR-MM-DD) parsujemy bez dayfirst - kolejnosc jest jednoznaczna.
+    # Europejskie (DD.MM / DD/MM) z dayfirst, bo dzien jest pierwszy.
+    # Zalozenie: format europejski dzien-pierwszy (dane z polskiej firmy).
+    # Dwuznacznej daty jak "03-04-2023" nie da sie rozstrzygnac EU/US 
+    # README, sekcja "Zalozenia i ograniczenia".
+    # podzial ISO / europejskie jest konieczny, bo dayfirst psuje daty ISO
     iso = seria.str.match(r"^\d{4}-").fillna(False)
     daty_iso = pd.to_datetime(seria.where(iso), format="ISO8601", errors="coerce")
     daty_eu = pd.to_datetime(seria.where(~iso), format="mixed", dayfirst=True, errors="coerce")
     return daty_iso.fillna(daty_eu)
-
 
 def czysc_daty(df, raport):
     przed = df["data_sprzedazy"].copy()
@@ -92,9 +89,9 @@ def czysc_daty(df, raport):
 
 def czysc_liczby(df, raport):
     # CENA: w niektorych wierszach to "4,29" (tekst z przecinkiem) zamiast 4.29.
-    # Krok 1: zamien przecinek na kropke. .str.replace dziala na calej kolumnie.
-    # Krok 2: pd.to_numeric z errors="coerce" - zamienia tekst na liczbe,
-    #         a czego sie nie da (np. puste pole) -> NaN, zamiast wywalic skrypt.
+    # Zamienia przecinek na kropke. .str.replace na calej kolumnie.
+    # pd.to_numeric z errors="coerce" - zamienia tekst na liczbe,
+    # a czego sie nie da (np. puste pole) -> NaN, zamiast wywalic skrypt.
     cena_przed = df["cena_jednostkowa"].copy()
     df["cena_jednostkowa"] = df["cena_jednostkowa"].str.replace(",", ".", regex=False)
     df["cena_jednostkowa"] = pd.to_numeric(df["cena_jednostkowa"], errors="coerce")
@@ -107,11 +104,11 @@ def czysc_liczby(df, raport):
     # ILOSC: tekst -> liczba.
     df["ilosc"] = pd.to_numeric(df["ilosc"], errors="coerce")
 
-    # UJEMNE ILOSCI: -112 sztuk to blad (nie da sie sprzedac minus 112).
+    # UJEMNE ILOSCI: Np. -112 sztuk to blad (nie da sie sprzedac minus 112).
     # Zakladamy, ze to literowka znaku i bierzemy wartosc bezwzgledna.
     # (Inna mozliwa interpretacja: to ZWROTY towaru - wtedy nalezaloby je
     #  liczyc osobno, nie prostowac znaku. Ktora wersja jest poprawna,
-    #  uzgodniloby sie z biznesem. Tu zakladam literowke.)
+    #  uzgodniloby sie z biznesem. Tu zakladam literowke. Opisane w README.)
     ujemne = (df["ilosc"] < 0).sum()
     raport["ilosc_ujemna"] = int(ujemne)
     df["ilosc"] = df["ilosc"].abs()
@@ -138,12 +135,12 @@ def oznacz_duplikaty(df, raport):
     raport["duplikaty_do_weryfikacji"] = int(df["potencjalny_duplikat"].sum())
     return df
 
-# --- KLOCEK 4b: standaryzacja tekstu (regiony, produkty) ---
+# Standaryzacja tekstu (regiony, produkty)
 
 def _normalizuj(seria):
     # Wspolna normalizacja tekstu: usun spacje z brzegow, na male litery,
     # wielokrotne spacje wewnatrz -> pojedyncza. To skleja warianty rozniace
-    # sie TYLKO formatowaniem, zanim w ogole siegniemy po mape.
+    # sie tylko formatowaniem.
     return (seria.str.strip()
                  .str.lower()
                  .str.replace(r"\s+", " ", regex=True))
@@ -152,7 +149,7 @@ def _normalizuj(seria):
 def standaryzuj_tekst(df, raport, kolumna, mapa, nazwa_w_raporcie):
     znorm = _normalizuj(df[kolumna])
 
-    # NIEROZPOZNANE: znormalizowane wartosci spoza mapy.
+    # Znormalizowane wartosci spoza mapy.
     maska_nieznane = ~znorm.isin(mapa.keys()) & znorm.notna()
 
     # Zamiast samej listy wartosci - namiar: dla kazdej nierozpoznanej wartosci
@@ -168,6 +165,11 @@ def standaryzuj_tekst(df, raport, kolumna, mapa, nazwa_w_raporcie):
                 "liczba": len(grupa),
             })
     raport[f"{nazwa_w_raporcie}_nierozpoznane"] = nierozpoznane
+
+    # Wlasciwa standaryzacja: .map() zamienia kazda znormalizowana wartosc na
+    # docelowa z mapy. Wartosci spoza mapy daja NaN -> .fillna przywraca
+    # ORYGINAL, zeby niczego nie zgubic (nierozpoznane juz mamy w raporcie).
+    df[kolumna] = znorm.map(mapa).fillna(df[kolumna])
     return df
 
 def czysc_sprzedawcow(df, raport):
@@ -187,8 +189,9 @@ def czysc_sprzedawcow(df, raport):
 
 def przelicz_wartosc(df, raport):
     # wartosc to wielkosc POCHODNA: powinna wynikac z ilosc * cena.
-    # Czesc wierszy ma wartosc niezgodna - traktujemy ilosc i cene jako
-    # zrodlo prawdy (dane pierwotne) i przeliczamy wartosc od nowa.
+    # Gdy zapisana wartosc nie zgadza sie z iloczynem ilosc * cena, ufamy
+    # ilosci i cenie (dane pierwotne) i przeliczamy wartosc od nowa -
+    # traktujemy ja jako blednie policzona, nie ilosc/cene.
     # (W realnej firmie: uzgodnic z biznesem, ktore pole jest "prawda".)
     df["wartosc"] = pd.to_numeric(df["wartosc"], errors="coerce")
     poprawna = (df["ilosc"] * df["cena_jednostkowa"]).round(2)
@@ -206,55 +209,27 @@ def przelicz_wartosc(df, raport):
     raport["wartosc_bez_ceny"] = int(df["wartosc"].isna().sum())
     return df
 
-if __name__ == "__main__":
-    raport = {}  # tu zbieramy statystyki napraw na potrzeby raportu jakosci
-    df = wczytaj_dane()
-    print(f"Wczytano {len(df)} wierszy z {df['plik_zrodlowy'].nunique()} plikow\n")
-
-    print("PRZED czyszczeniem dat - przyklady z roznych plikow:")
-    print(df.groupby("plik_zrodlowy")["data_sprzedazy"].first().to_string())
-
+def wyczysc_dane(folder="dane_surowe"):
+    """Uruchamia caly pipeline czyszczenia i zwraca (df, raport)."""
+    raport = {}
+    df = wczytaj_dane(folder)
     df = czysc_daty(df, raport)
-
-    print("\nPO czyszczeniu dat - ten sam typ, jeden format:")
-    print(df.groupby("plik_zrodlowy")["data_sprzedazy"].first().to_string())
-    print(f"\nTyp kolumny daty: {df['data_sprzedazy'].dtype}  (datetime, nie tekst!)")
-    print(f"Dat przeksztalconych z innego formatu: {raport['daty_przeksztalcone']}")
-    print(f"Dat niesparsowanych (zepsutych): {raport['daty_niesparsowane']}")
-    print("Rozklad miesiecy (powinny byc tylko 1,2,3):",
-          sorted(df["data_sprzedazy"].dt.month.dropna().unique().tolist()))
-    print("Niesparsowane daty:", raport["daty_niesparsowane"])
-
     df = czysc_liczby(df, raport)
-    print("\n--- KLOCEK 3: liczby ---")
-    print(f"Cen naprawionych (przecinek -> kropka): {raport['cena_przecinek']}")
-    print(f"Cen pustych (do uzupelnienia pozniej):  {raport['cena_pusta']}")
-    print(f"Ujemnych ilosci naprawionych:           {raport['ilosc_ujemna']}")
-    print(f"\nTyp ceny: {df['cena_jednostkowa'].dtype}, typ ilosci: {df['ilosc'].dtype}")
-
     df = oznacz_duplikaty(df, raport)
-    print("\n--- KLOCEK 4a: duplikaty ---")
-    print(f"Wierszy oznaczonych jako potencjalny duplikat: {raport['duplikaty_do_weryfikacji']}")
-    print("(NIE usuniete - do weryfikacji przez czlowieka)")
-
     df = standaryzuj_tekst(df, raport, "region", MAPA_REGIONOW, "region")
     df = standaryzuj_tekst(df, raport, "produkt", MAPA_PRODUKTOW, "produkt")
-    print("\n--- KLOCEK 4b: standaryzacja tekstu ---")
-    print(f"Regiony po standaryzacji: {sorted(df['region'].dropna().unique())}")
-    print(f"Produkty po standaryzacji: {sorted(df['produkt'].dropna().unique())}")
-
-    print("\nNierozpoznane wartosci do poprawienia recznie:")
-    nierozpoznane = raport["region_nierozpoznane"] + raport["produkt_nierozpoznane"]
-    if not nierozpoznane:
-        print("  brak - wszystko rozpoznane")
-    for r in nierozpoznane:
-        print(f"  Wartosc '{r['wartosc']}' ({r['liczba']}x) nie pasuje. "
-              f"Otworz plik '{r['plik']}', znajdz '{r['wartosc']}' (Ctrl+F) i popraw.")
-        
     df = czysc_sprzedawcow(df, raport)
     df = przelicz_wartosc(df, raport)
-    print("\n--- KLOCEK 5a: sprzedawcy + wartosc ---")
-    print(f"Pustych pol sprzedawcy (-> 'Nieznany'): {raport['sprzedawca_brak']}")
-    print(f"Niezgodnych wartosci (przeliczone):     {raport['wartosc_niezgodna']}")
-    print(f"Wartosci bez ceny (zostaja puste):      {raport['wartosc_bez_ceny']}")
+    return df, raport
 
+if __name__ == "__main__":
+    # Ten blok sluzy tylko do testowego uruchomienia z terminala.
+    # Docelowo pipeline wola Streamlit przez funkcje wyczysc_dane().
+    df, raport = wyczysc_dane()
+    print(f"Wyczyszczono {len(df)} wierszy")
+    print(f"Daty: przeksztalcono {raport['daty_przeksztalcone']}, niesparsowano {raport['daty_niesparsowane']}")
+    print(f"Ceny z przecinkiem: {raport['cena_przecinek']}, puste: {raport['cena_pusta']}")
+    print(f"Ujemne ilosci: {raport['ilosc_ujemna']}, duplikaty: {raport['duplikaty_do_weryfikacji']}")
+    print(f"Sprzedawcy uzupelnieni: {raport['sprzedawca_brak']}, wartosci przeliczone: {raport['wartosc_niezgodna']}")
+    nierozp = raport["region_nierozpoznane"] + raport["produkt_nierozpoznane"]
+    print(f"Do recznej poprawy: {len(nierozp)} wartosci")

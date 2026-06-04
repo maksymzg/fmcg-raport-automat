@@ -3,7 +3,7 @@ import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 
-# --- KLOCEK 5b: eksport wyczyszczonych danych + raportu jakosci do Excela ---
+# Eksport wyczyszczonych danych + raportu jakosci do Excela 
 
 KOLUMNY_DANE = ["data_sprzedazy", "region", "sprzedawca", "produkt",
                 "ilosc", "cena_jednostkowa", "wartosc", "plik_zrodlowy", "potencjalny_duplikat"]
@@ -66,13 +66,13 @@ def eksportuj_do_excela(df, raport, sciezka="raporty/raport_sprzedaz.xlsx"):
         "Sprzedaz wg sprzedawcy": df.groupby("sprzedawca")["wartosc"].sum().round(2).sort_values(ascending=False),
     }
 
-    # --- 1. Dane + tabele raportowe (pandas) ---
+    # 1. Dane + tabele raportowe (pandas) 
     with pd.ExcelWriter(sciezka, engine="openpyxl") as writer:
         df[KOLUMNY_DANE].to_excel(writer, sheet_name="Dane", index=False)
         _zbuduj_jakosc(raport).to_excel(writer, sheet_name="Jakosc_danych", index=False)
         _zbuduj_do_poprawienia(raport).to_excel(writer, sheet_name="Do_poprawienia", index=False)
 
-    # --- 2. Formatowanie + zakladka Podsumowanie (openpyxl) ---
+    # 2. Formatowanie + zakladka Podsumowanie (openpyxl)
     wb = load_workbook(sciezka)
 
     # Podsumowanie budujemy recznie, zeby miec czyste tytuly bez dublowania naglowkow
@@ -115,6 +115,8 @@ def eksportuj_do_excela(df, raport, sciezka="raporty/raport_sprzedaz.xlsx"):
     return sciezka
 
 if __name__ == "__main__":
-    from eksport_excel import eksportuj_do_excela
+    # Test z terminala. Docelowo eksport wola Streamlit.
+    from czyszczenie import wyczysc_dane   # import z DRUGIEGO pliku
+    df, raport = wyczysc_dane()
     sciezka = eksportuj_do_excela(df, raport)
-    print(f"\nRaport zapisany: {sciezka}")
+    print(f"Raport zapisany: {sciezka}")
