@@ -2,6 +2,7 @@ import os
 import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.styles import Font, PatternFill, Alignment
+import io
 
 # Eksport wyczyszczonych danych + raportu jakosci do Excela 
 
@@ -55,7 +56,11 @@ def _dopasuj_szerokosci(ws):
 
 
 def eksportuj_do_excela(df, raport, sciezka="raporty/raport_sprzedaz.xlsx"):
-    os.makedirs(os.path.dirname(sciezka), exist_ok=True)
+    # Folder tworzymy tylko gdy zapisujemy na DYSK (sciezka to tekst).
+    # Gdy sciezka to bufor w pamieci (BytesIO) - pomijamy, bufor nie ma folderu.
+    if isinstance(sciezka, str):
+        os.makedirs(os.path.dirname(sciezka), exist_ok=True)
+    # ... reszta funkcji bez zmian ...
 
     # agregaty - liczone w pandas (to raport-zrzut, nie model do edycji w Excelu)
     agregaty = {
@@ -113,6 +118,17 @@ def eksportuj_do_excela(df, raport, sciezka="raporty/raport_sprzedaz.xlsx"):
 
     wb.save(sciezka)
     return sciezka
+
+def eksportuj_do_bajtow(df, raport):
+    """Generuje raport Excel w PAMIECI i zwraca bajty (do pobrania w Streamlit).
+
+    Tej samej logiki co eksportuj_do_excela uzywamy do zapisu na dysk lokalnie;
+    tu kierujemy wynik do BytesIO (plik w pamieci) zamiast na dysk serwera,
+    bo uzytkownik w przegladarce nie ma dostepu do dysku serwera."""
+    bufor = io.BytesIO()                        # "plik" istniejacy tylko w pamieci
+    eksportuj_do_excela(df, raport, sciezka=bufor)  # ta sama funkcja, inny cel zapisu
+    bufor.seek(0)                               # przewin na poczatek przed odczytem
+    return bufor.getvalue()                     # surowe bajty pliku xlsx
 
 if __name__ == "__main__":
     # Test z terminala. Docelowo eksport wola Streamlit.

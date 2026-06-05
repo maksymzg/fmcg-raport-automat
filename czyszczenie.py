@@ -34,35 +34,36 @@ MAPA_PRODUKTOW = {
 }
 # Wczytanie i polaczenie wszystkich plikow z folderu
 
-def wczytaj_dane(folder="dane_surowe"):
-    # Kod służy do znalezienia wszystkich plików z rozszerzeniem .csv,
-    # które znajdują się w określonym katalogu, i zwrócenia ich w postaci listy uporządkowanej 
-    sciezki = sorted(glob.glob(os.path.join(folder, "*.csv")))
-    
-    ramki = []
-    for sciezka in sciezki:
-        # Wczytujemy wszystko jako tekst, aby uniknąć konfliktów typów przy łączeniu plików 
-        # (np. gdy Pandas różnie zinterpretuje "129,00" w różnych plikach). 
-        # Właściwe rzutowanie typów zrobimy ręcznie w kolejnym kroku.
-        df = pd.read_csv(sciezka, dtype=str)
-        # WALIDACJA: sprawdzamy kolumny KAZDEGO pliku tuz po wczytaniu.
-        kolumny_pliku = set(df.columns)
-        if kolumny_pliku != OCZEKIWANE_KOLUMNY:
-            brakujace = OCZEKIWANE_KOLUMNY - kolumny_pliku
-            nadmiarowe = kolumny_pliku - OCZEKIWANE_KOLUMNY
-            raise ValueError(
-                f"Plik {sciezka} ma zle kolumny.\n"
-                f"  Brakuje:    {brakujace or 'brak'}\n"
-                f"  Nadmiarowe: {nadmiarowe or 'brak'}\n"
-                f"  Popraw naglowki w pliku, aby pasowaly do oczekiwanych kolumn."
-            )
-        df["plik_zrodlowy"] = os.path.basename(sciezka)
-        ramki.append(df)
+def _wczytaj_jeden(zrodlo, nazwa):
+    """Wczytuje jeden CSV (sciezka LUB obiekt plikopodobny), waliduje kolumny,
+    dodaje plik_zrodlowy. Wspolna logika dla wczytywania z folderu i z uploadu."""
+    df = pd.read_csv(zrodlo, dtype=str)
+    kolumny_pliku = set(df.columns)
+    if kolumny_pliku != OCZEKIWANE_KOLUMNY:
+        brakujace = OCZEKIWANE_KOLUMNY - kolumny_pliku
+        nadmiarowe = kolumny_pliku - OCZEKIWANE_KOLUMNY
+        raise ValueError(
+            f"Plik {nazwa} ma zle kolumny.\n"
+            f"  Brakuje:    {brakujace or 'brak'}\n"
+            f"  Nadmiarowe: {nadmiarowe or 'brak'}\n"
+            f"  Popraw naglowki w pliku, aby pasowaly do oczekiwanych kolumn."
+        )
+    df["plik_zrodlowy"] = nazwa
+    return df
 
-    # concat sklada liste ramek w jedna, jedna pod druga.
-    # ignore_index=True = przenumeruj wiersze od 0
-    polaczone = pd.concat(ramki, ignore_index=True)
-    return polaczone
+
+def wczytaj_dane(folder="dane_surowe"):
+    """Wczytuje wszystkie CSV z folderu (uzycie lokalne / terminal)."""
+    sciezki = sorted(glob.glob(os.path.join(folder, "*.csv")))
+    ramki = [_wczytaj_jeden(s, os.path.basename(s)) for s in sciezki]
+    return pd.concat(ramki, ignore_index=True)
+
+
+def wczytaj_pliki(pliki):
+    """Wczytuje liste wgranych plikow (obiekty ze Streamlit file_uploader).
+    Kazdy ma atrybut .name (nazwa) i jest plikopodobny (pandas go odczyta)."""
+    ramki = [_wczytaj_jeden(p, p.name) for p in pliki]
+    return pd.concat(ramki, ignore_index=True)
 
 
 # Czyszczenie dat (3 formaty -> jeden prawdziwy typ daty) ---
@@ -209,18 +210,27 @@ def przelicz_wartosc(df, raport):
     raport["wartosc_bez_ceny"] = int(df["wartosc"].isna().sum())
     return df
 
-def wyczysc_dane(folder="dane_surowe"):
-    """Uruchamia caly pipeline czyszczenia i zwraca (df, raport)."""
+def wyczysc_dane(zrodlo="dane_surowe"):
+    """Uruchamia caly pipeline czyszczenia i zwraca (df, raport).
+
+    zrodlo moze byc:
+      - sciezka do folderu (str) -> wczytuje wszystkie CSV z folderu (lokalnie),
+      - lista wgranych plikow    -> wczytuje je (Streamlit file_uploader).
+    """
+    if isinstance(zrodlo, str):
+        df = wczytaj_dane(zrodlo)        # str = sciezka do folderu
+    else:
+        df = wczytaj_pliki(zrodlo)       # inaczej = lista wgranych plikow
     raport = {}
-    df = wczytaj_dane(folder)
     df = czysc_daty(df, raport)
-    df = czysc_liczby(df, raport)
-    df = oznacz_duplikaty(df, raport)
-    df = standaryzuj_tekst(df, raport, "region", MAPA_REGIONOW, "region")
+    df = czysc_liczby(df, raport)                                          
+    df = oznacz_duplikaty(df, raport)                                      
+    df = standaryzuj_tekst(df, raport, "region", MAPA_REGIONOW, "region")  
     df = standaryzuj_tekst(df, raport, "produkt", MAPA_PRODUKTOW, "produkt")
-    df = czysc_sprzedawcow(df, raport)
-    df = przelicz_wartosc(df, raport)
-    return df, raport
+    df = czysc_sprzedawcow(df, raport)                                     
+    df = przelicz_wartosc(df, raport)                                      
+    return df, raport                                                     
+
 
 if __name__ == "__main__":
     # Ten blok sluzy tylko do testowego uruchomienia z terminala.
