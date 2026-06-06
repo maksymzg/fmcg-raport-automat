@@ -109,6 +109,7 @@ def eksportuj_do_excela(df, raport, sciezka="raporty/raport_sprzedaz.xlsx"):
         _formatuj_naglowek(wb[nazwa])
 
     # Dane: format daty i waluty + filtr
+    # Dane: format daty i waluty + filtr
     dane = wb["Dane"]
     for wiersz in dane.iter_rows(min_row=2):
         wiersz[0].number_format = "YYYY-MM-DD"
@@ -116,6 +117,14 @@ def eksportuj_do_excela(df, raport, sciezka="raporty/raport_sprzedaz.xlsx"):
         wiersz[6].number_format = '#,##0.00 "zl"'
     dane.auto_filter.ref = dane.dimensions
 
+    # Gdy zapisujemy do bufora w pamieci (BytesIO), ten sam bufor zostal juz
+    # raz zapisany przez ExcelWriter wyzej. Drugi zapis NIE kasuje pierwszego -
+    # dokleja sie do niego, dajac uszkodzony plik. Dlatego czyscimy bufor przed
+    # finalnym zapisem. Przy zapisie na dysk (str) nie trzeba - otwarcie pliku
+    # po nazwie samo kasuje poprzednia zawartosc.
+    if not isinstance(sciezka, str):
+        sciezka.seek(0)
+        sciezka.truncate()
     wb.save(sciezka)
     return sciezka
 
