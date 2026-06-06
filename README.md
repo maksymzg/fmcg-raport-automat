@@ -4,7 +4,7 @@
 
 Narzędzie, które bierze surowe, brudne pliki sprzedażowe (takie, jakie realnie
 trafiają z systemów do działu raportowania), **wykrywa i naprawia błędy w danych**,
-a następnie generuje czysty, sformatowany raport w Excelu — bez ręcznej dłubaniny.
+a następnie generuje czysty, sformatowany raport w Excelu - bez ręcznej dłubaniny.
 Dostępne jako aplikacja webowa (wgraj pliki → pobierz raport) oraz z linii poleceń.
 
 Cel: pokazać, że typową comiesięczną robotę reporting analyst (godziny czyszczenia
@@ -30,21 +30,21 @@ wyeksportowany w innym formacie, z typowymi błędami:
 
 Dane są **syntetyczne i generowane** (`generuj_dane.py`) z kontrolowaną liczbą
 błędów w 9 kategoriach. Skrypt raportuje dokładne liczby napraw przy **każdym
-uruchomieniu** — dzięki temu rezultat jest mierzalny i weryfikowalny na konkretnych
+uruchomieniu** - dzięki temu rezultat jest mierzalny i weryfikowalny na konkretnych
 danych, a nie deklaratywny.
 
 ## Jak to działa
 
-1. **Wczytanie i konsolidacja** — wszystkie wgrane pliki CSV są walidowane
+1. **Wczytanie i konsolidacja** - wszystkie wgrane pliki CSV są walidowane
    (sprawdzenie kolumn) i łączone w jedną tabelę.
-2. **Czyszczenie** — daty (3 formaty → jeden typ `datetime`), liczby (cena, ilość),
+2. **Czyszczenie** - daty (3 formaty → jeden typ `datetime`), liczby (cena, ilość),
    standaryzacja regionów i produktów, uzupełnienie sprzedawców, przeliczenie
    wartości.
-3. **Flagowanie duplikatów** — potencjalne powtórki są oznaczane do weryfikacji,
+3. **Flagowanie duplikatów** - potencjalne powtórki są oznaczane do weryfikacji,
    a **nie** usuwane (patrz: Założenia i ograniczenia).
-4. **Raport jakości** — co i ile zostało naprawione, z rozbiciem na kategorie,
+4. **Raport jakości** - co i ile zostało naprawione, z rozbiciem na kategorie,
    plus lista nierozpoznanych wartości z namiarem na plik i instrukcją poprawy.
-5. **Eksport do Excela** — sformatowany skoroszyt z czterema zakładkami:
+5. **Eksport do Excela** - sformatowany skoroszyt z czterema zakładkami:
    czyste dane, podsumowanie sprzedaży, raport jakości i lista do poprawienia.
 
 ## Uruchomienie
@@ -86,7 +86,7 @@ więc można je wywołać z aplikacji webowej, skryptu czy harmonogramu.
 
 ## Stack
 
-Python (pandas, openpyxl), Streamlit. Bez baz danych — celowo lekkie.
+Python (pandas, openpyxl), Streamlit. Bez baz danych - celowo lekkie.
 
 ## Założenia i ograniczenia
 
@@ -99,10 +99,10 @@ uzgodniłoby się je z zespołem, który zna źródło danych:
   amerykańskim. Przy danych z mieszanych źródeł US/EU należałoby wykrywać format
   per plik albo wymusić ISO (`RRRR-MM-DD`) na wejściu.
 - **Ujemne ilości** są traktowane jako literówka znaku (brana wartość bezwzględna).
-  Alternatywna interpretacja — zwroty towaru — wymagałaby liczenia osobno.
+  Alternatywna interpretacja - zwroty towaru - wymagałaby liczenia osobno.
 - **Niezgodna wartość transakcji** jest przeliczana jako `ilość × cena`, czyli
   ilość i cena traktowane są jako źródło prawdy (dane pierwotne).
-- **Duplikaty nie są usuwane**, tylko oznaczane do weryfikacji — bez znacznika
+- **Duplikaty nie są usuwane**, tylko oznaczane do weryfikacji - bez znacznika
   czasu lub ID transakcji nie da się odróżnić technicznej powtórki od dwóch
   prawdziwych identycznych transakcji tego samego dnia.
 - **Puste pola sprzedawcy** uzupełniane są wartością `Nieznany` (nie zgadujemy
