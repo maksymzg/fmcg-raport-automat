@@ -1,11 +1,14 @@
 # FMCG – automatyzacja raportu sprzedażowego
 
+🔗 **Demo na żywo:** https://fmcg-raport-automat-vgeevdu7bdryikyfrmdccx.streamlit.app/
+
 Narzędzie, które bierze surowe, brudne pliki sprzedażowe (takie, jakie realnie
 trafiają z systemów do działu raportowania), **wykrywa i naprawia błędy w danych**,
 a następnie generuje czysty, sformatowany raport w Excelu — bez ręcznej dłubaniny.
+Dostępne jako aplikacja webowa (wgraj pliki → pobierz raport) oraz z linii poleceń.
 
 Cel: pokazać, że typową comiesięczną robotę reporting analyst (godziny czyszczenia
-danych w Excelu) można sprowadzić do jednego uruchomienia, **z mierzalnym raportem
+danych w Excelu) można sprowadzić do jednego kliknięcia, **z mierzalnym raportem
 jakości danych** na wejściu.
 
 ## Problem
@@ -32,9 +35,8 @@ danych, a nie deklaratywny.
 
 ## Jak to działa
 
-1. **Wczytanie i konsolidacja** — `glob` łapie wszystkie pliki CSV z folderu
-   (nowy plik = zero zmian w kodzie), waliduje kolumny każdego pliku i łączy
-   w jedną tabelę.
+1. **Wczytanie i konsolidacja** — wszystkie wgrane pliki CSV są walidowane
+   (sprawdzenie kolumn) i łączone w jedną tabelę.
 2. **Czyszczenie** — daty (3 formaty → jeden typ `datetime`), liczby (cena, ilość),
    standaryzacja regionów i produktów, uzupełnienie sprzedawców, przeliczenie
    wartości.
@@ -47,43 +49,44 @@ danych, a nie deklaratywny.
 
 ## Uruchomienie
 
+### Aplikacja webowa (lokalnie)
+
 ```bash
-# 1. utwórz i aktywuj środowisko wirtualne
 python3 -m venv venv
 source venv/bin/activate        # macOS / Linux
-
-# 2. zainstaluj zależności
 pip install -r requirements.txt
-
-# 3. (opcjonalnie) wygeneruj świeży zestaw danych testowych
-python generuj_dane.py
-
-# 4. uruchom czyszczenie (wypisuje podsumowanie napraw)
-python czyszczenie.py
-
-# 5. wygeneruj raport Excel (raporty/raport_sprzedaz.xlsx)
-python eksport_excel.py
+streamlit run app.py
 ```
+
+Aplikacja otworzy się w przeglądarce: wgraj pliki CSV, zobacz raport jakości,
+pobierz gotowy raport Excel.
+
+### Z linii poleceń (na danych z folderu `dane_surowe/`)
+
+```bash
+python czyszczenie.py        # wypisuje podsumowanie napraw
+python eksport_excel.py      # generuje raporty/raport_sprzedaz.xlsx
+python generuj_dane.py       # (opcjonalnie) świeży zestaw danych testowych
+```
+
 ## Struktura
-
-```
+```bash
 fmcg-raport-automat/
 ├── dane_surowe/        # przykładowe brudne pliki CSV
 ├── generuj_dane.py     # generator danych testowych (z kontrolowanymi błędami)
-├── czyszczenie.py      # silnik: wczytanie -> czyszczenie -> raport (funkcja wyczysc_dane)
-├── eksport_excel.py    # eksport wyczyszczonych danych i raportu jakości do Excela
+├── czyszczenie.py      # silnik czyszczenia (funkcja wyczysc_dane)
+├── eksport_excel.py    # eksport do Excela (na dysk i do pamięci/BytesIO)
+├── app.py              # interfejs webowy (Streamlit)
 ├── requirements.txt
 └── README.md
 ```
-
-Kod jest rozdzielony tak, by logika czyszczenia (`czyszczenie.py`) była niezależna
-od formatu wyjścia (`eksport_excel.py`). Oba moduły wystawiają funkcje
-(`wyczysc_dane`, `eksportuj_do_excela`), więc można je wywołać z dowolnego
-interfejsu — skryptu, harmonogramu czy aplikacji webowej.
+Logika czyszczenia (`czyszczenie.py`) jest niezależna od formatu wyjścia
+(`eksport_excel.py`) i od interfejsu (`app.py`). Każdy moduł wystawia funkcje,
+więc można je wywołać z aplikacji webowej, skryptu czy harmonogramu.
 
 ## Stack
 
-Python (pandas, openpyxl). Bez baz danych — celowo lekkie, uruchamialne lokalnie.
+Python (pandas, openpyxl), Streamlit. Bez baz danych — celowo lekkie.
 
 ## Założenia i ograniczenia
 
@@ -115,5 +118,5 @@ uzgodniłoby się je z zespołem, który zna źródło danych:
 - [x] Uzupełnienie sprzedawców i przeliczenie wartości
 - [x] Raport jakości danych
 - [x] Eksport do sformatowanego Excela
-- [ ] Interfejs webowy (Streamlit) — w trakcie
-- [ ] Dopasowanie rozmyte literówek do znanej listy (rapidfuzz) — planowane
+- [x] Interfejs webowy (Streamlit) + wdrożenie w chmurze
+- [ ] Dopasowanie rozmyte literówek do znanej listy (rapidfuzz)
