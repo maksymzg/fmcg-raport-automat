@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 from czyszczenie import wyczysc_dane
 from eksport_excel import eksportuj_do_bajtow
 
@@ -54,7 +55,20 @@ if nierozp:
                  f"- otworz plik, znajdz wartosc (Ctrl+F) i popraw.")
 else:
     st.info("Wszystkie wartosci rozpoznane - nic do recznej poprawy.")
-
+# --- Auto-poprawki fuzzy (do sprawdzenia) ---
+fuzzy = raport["region_fuzzy"] + raport["produkt_fuzzy"]
+if fuzzy:
+    st.subheader("Auto-poprawione literowki (do sprawdzenia)")
+    st.caption("Narzedzie samo poprawilo te wartosci na podstawie podobienstwa. "
+               "To zgadywanie - zweryfikuj, czy dopasowanie jest trafne.")
+    st.dataframe(
+        pd.DataFrame([{
+            "Bylo": f["wartosc"],
+            "Poprawiono na": f["poprawiono_na"],
+            "Podobienstwo": f["wynik"],
+        } for f in fuzzy]),
+        use_container_width=True,
+    )
 # --- Podglad wyczyszczonych danych ---
 st.subheader("Podglad wyczyszczonych danych")
 st.dataframe(df.head(50), use_container_width=True)
