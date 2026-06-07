@@ -16,7 +16,6 @@ from rapidfuzz import process, fuzz
 # Dobrany na danych: literowki ~89-92, naprawde nowe nazwy ~41-74 (luka ~85).
 PROG_FUZZY = 85
 
-# Ustalamy ze względu na jakosc danych
 OCZEKIWANE_KOLUMNY = {"data_sprzedazy", "region", "sprzedawca",
                       "produkt", "ilosc", "cena_jednostkowa", "wartosc"}
 
@@ -46,7 +45,6 @@ MAPA_PRODUKTOW = {
     "woda gaz. 1.5l": "Woda gazowana 1.5L",
     "woda gazowana 1.5l": "Woda gazowana 1.5L",
 }
-# Wczytanie i polaczenie wszystkich plikow z folderu
 
 def _wczytaj_jeden(zrodlo, nazwa):
     """Wczytuje jeden CSV (sciezka LUB obiekt plikopodobny), waliduje kolumny,
@@ -83,19 +81,22 @@ def wczytaj_pliki(pliki):
 # Czyszczenie dat (3 formaty -> jeden prawdziwy typ daty) ---
 
 def _parsuj_daty(seria):
-    # Parsuje daty z trzech formatow (ISO, DD.MM, DD/MM) do jednego typu datetime.
+    """
+    Parsuje daty z trzech formatow (ISO, DD.MM, DD/MM) do jednego typu datetime.
+    """
     # ISO (RRRR-MM-DD) parsujemy bez dayfirst - kolejnosc jest jednoznaczna.
     # Europejskie (DD.MM / DD/MM) z dayfirst, bo dzien jest pierwszy.
-    # Zalozenie: format europejski dzien-pierwszy (dane z polskiej firmy).
-    # Dwuznacznej daty jak "03-04-2023" nie da sie rozstrzygnac EU/US 
-    # README, sekcja "Zalozenia i ograniczenia".
-    # podzial ISO / europejskie jest konieczny, bo dayfirst psuje daty ISO
+    # ZALOZENIE: format europejski dzien-pierwszy (dane z polskiej firmy).
+    # Dwuznacznej daty jak "03-04-2023" nie da sie rozstrzygnac EU/US.
+    # Podzial ISO / europejskie jest konieczny, bo dayfirst psuje daty ISO.
+    # Patrz: README, sekcja "Zalozenia i ograniczenia".
     iso = seria.str.match(r"^\d{4}-").fillna(False)
     daty_iso = pd.to_datetime(seria.where(iso), format="ISO8601", errors="coerce")
     daty_eu = pd.to_datetime(seria.where(~iso), format="mixed", dayfirst=True, errors="coerce")
     return daty_iso.fillna(daty_eu)
 
 def czysc_daty(df, raport):
+    """Parsuje kolumne dat i zlicza daty niesparsowane oraz przeksztalcone."""
     przed = df["data_sprzedazy"].copy()
     df["data_sprzedazy"] = _parsuj_daty(df["data_sprzedazy"])
     raport["daty_niesparsowane"] = int(df["data_sprzedazy"].isna().sum())
@@ -104,9 +105,8 @@ def czysc_daty(df, raport):
 
 def czysc_liczby(df, raport):
     # CENA: w niektorych wierszach to "4,29" (tekst z przecinkiem) zamiast 4.29.
-    # Zamienia przecinek na kropke. .str.replace na calej kolumnie.
-    # pd.to_numeric z errors="coerce" - zamienia tekst na liczbe,
-    # a czego sie nie da (np. puste pole) -> NaN, zamiast wywalic skrypt.
+    # errors="coerce" zamienia niekonwertowalne (np. puste pole) na NaN,
+    # zamiast pokazywać błąd
     cena_przed = df["cena_jednostkowa"].copy()
     df["cena_jednostkowa"] = df["cena_jednostkowa"].str.replace(",", ".", regex=False)
     df["cena_jednostkowa"] = pd.to_numeric(df["cena_jednostkowa"], errors="coerce")
@@ -116,7 +116,6 @@ def czysc_liczby(df, raport):
     # ile cen jest pustych (NaN) po konwersji?
     raport["cena_pusta"] = int(df["cena_jednostkowa"].isna().sum())
 
-    # ILOSC: tekst -> liczba.
     df["ilosc"] = pd.to_numeric(df["ilosc"], errors="coerce")
 
     # UJEMNE ILOSCI: Np. -112 sztuk to blad (nie da sie sprzedac minus 112).
@@ -130,9 +129,8 @@ def czysc_liczby(df, raport):
 
     return df
 
-# Oznaczanie potencjalnych duplikatow bez usuwania (do weryfikacji przez czlowieka)
-
 def oznacz_duplikaty(df, raport):
+    """Oznacza (nie usuwa) potencjalne duplikaty do weryfikacji przez czlowieka."""
     # Nie usuwamy duplikatow, bo bez znacznika czasu / ID transakcji nie da sie
     # odroznic technicznej powtorki od dwoch prawdziwych identycznych transakcji
     # tego samego dnia. Zamiast kasowac (i ryzykowac utrate realnej sprzedazy),
@@ -150,18 +148,17 @@ def oznacz_duplikaty(df, raport):
     raport["duplikaty_do_weryfikacji"] = int(df["potencjalny_duplikat"].sum())
     return df
 
-# Standaryzacja tekstu (regiony, produkty)
-
 def _normalizuj(seria):
-    # Wspolna normalizacja tekstu: usun spacje z brzegow, na male litery,
-    # wielokrotne spacje wewnatrz -> pojedyncza. To skleja warianty rozniace
-    # sie tylko formatowaniem.
+    """Normalizuje tekst do porownan: trim, male litery, pojedyncze spacje."""
+    # Skleja warianty rozniace sie tylko formatowaniem.
     return (seria.str.strip()
                  .str.lower()
                  .str.replace(r"\s+", " ", regex=True))
 
 
 def standaryzuj_tekst(df, raport, kolumna, mapa, nazwa_w_raporcie):
+    """Standaryzuje kolumne wg mapy (dopasowanie dokladne + fuzzy);
+    nierozpoznane wartosci zostawia do recznej weryfikacji."""
     znorm = _normalizuj(df[kolumna])
 
     # 1. DOPASOWANIE DOKLADNE: znormalizowana wartosc obecna w mapie.
@@ -204,6 +201,7 @@ def standaryzuj_tekst(df, raport, kolumna, mapa, nazwa_w_raporcie):
     return df
 
 def czysc_sprzedawcow(df, raport):
+    """Przycina spacje w nazwiskach i uzupelnia puste pola wartoscia 'Nieznany'."""
     # 1. Spacje wokol nazwiska: "  Nowak " -> "Nowak". Inaczej ten sam
     #    sprzedawca liczylby sie jako dwoch roznych w podsumowaniu.
     df["sprzedawca"] = df["sprzedawca"].str.strip()
@@ -219,6 +217,7 @@ def czysc_sprzedawcow(df, raport):
 
 
 def przelicz_wartosc(df, raport):
+    """Przelicza wartosc jako ilosc*cena (dane pierwotne) i zlicza niezgodnosci."""
     # wartosc to wielkosc POCHODNA: powinna wynikac z ilosc * cena.
     # Gdy zapisana wartosc nie zgadza sie z iloczynem ilosc * cena, ufamy
     # ilosci i cenie (dane pierwotne) i przeliczamy wartosc od nowa -
@@ -253,13 +252,13 @@ def wyczysc_dane(zrodlo="dane_surowe"):
         df = wczytaj_pliki(zrodlo)       # inaczej = lista wgranych plikow
     raport = {}
     df = czysc_daty(df, raport)
-    df = czysc_liczby(df, raport)                                          
-    df = oznacz_duplikaty(df, raport)                                      
-    df = standaryzuj_tekst(df, raport, "region", MAPA_REGIONOW, "region")  
+    df = czysc_liczby(df, raport)
+    df = oznacz_duplikaty(df, raport)
+    df = standaryzuj_tekst(df, raport, "region", MAPA_REGIONOW, "region")
     df = standaryzuj_tekst(df, raport, "produkt", MAPA_PRODUKTOW, "produkt")
-    df = czysc_sprzedawcow(df, raport)                                     
-    df = przelicz_wartosc(df, raport)                                      
-    return df, raport                                                     
+    df = czysc_sprzedawcow(df, raport)
+    df = przelicz_wartosc(df, raport)
+    return df, raport
 
 
 if __name__ == "__main__":

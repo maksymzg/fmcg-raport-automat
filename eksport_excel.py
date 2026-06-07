@@ -12,8 +12,6 @@ import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 
-# Eksport wyczyszczonych danych + raportu jakosci do Excela 
-
 KOLUMNY_DANE = ["data_sprzedazy", "region", "sprzedawca", "produkt",
                 "ilosc", "cena_jednostkowa", "wartosc", "plik_zrodlowy", "potencjalny_duplikat"]
 
@@ -85,6 +83,11 @@ def _dopasuj_szerokosci(ws):
 
 
 def eksportuj_do_excela(df, raport, sciezka="raporty/raport_sprzedaz.xlsx"):
+    """Zapisuje dane i raport jakosci do sformatowanego skoroszytu Excel.
+
+    sciezka moze byc tekstem (zapis na dysk) lub buforem BytesIO (zapis do
+    pamieci - do pobrania w aplikacji webowej). Zwraca uzyta sciezke/bufor.
+    """
     # Folder tworzymy tylko gdy zapisujemy na DYSK (sciezka to tekst).
     # Gdy sciezka to bufor w pamieci (BytesIO) - pomijamy, bufor nie ma folderu.
     if isinstance(sciezka, str):
@@ -99,7 +102,7 @@ def eksportuj_do_excela(df, raport, sciezka="raporty/raport_sprzedaz.xlsx"):
         "Sprzedaz wg sprzedawcy": df.groupby("sprzedawca")["wartosc"].sum().round(2).sort_values(ascending=False),
     }
 
-    # 1. Dane + tabele raportowe (pandas) 
+    # 1. Dane + tabele raportowe (pandas)
     with pd.ExcelWriter(sciezka, engine="openpyxl") as writer:
         df[KOLUMNY_DANE].to_excel(writer, sheet_name="Dane", index=False)
         _zbuduj_jakosc(raport).to_excel(writer, sheet_name="Jakosc_danych", index=False)
@@ -155,6 +158,7 @@ def eksportuj_do_excela(df, raport, sciezka="raporty/raport_sprzedaz.xlsx"):
     wb.save(sciezka)
     return sciezka
 
+
 def eksportuj_do_bajtow(df, raport):
     """Generuje raport Excel w PAMIECI i zwraca bajty (do pobrania w Streamlit).
 
@@ -165,6 +169,7 @@ def eksportuj_do_bajtow(df, raport):
     eksportuj_do_excela(df, raport, sciezka=bufor)  # ta sama funkcja, inny cel zapisu
     bufor.seek(0)                               # przewin na poczatek przed odczytem
     return bufor.getvalue()                     # surowe bajty pliku xlsx
+
 
 if __name__ == "__main__":
     # Test z terminala. Docelowo eksport wola Streamlit.
