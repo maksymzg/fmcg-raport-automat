@@ -1,8 +1,16 @@
+"""
+Eksport wyczyszczonych danych i raportu jakosci do pliku Excel.
+
+Generuje sformatowany skoroszyt z zakladkami: dane, podsumowanie sprzedazy,
+raport jakosci, wartosci do recznej poprawy i auto-poprawki fuzzy. Potrafi
+zapisac na dysk (sciezka) lub do pamieci (BytesIO) - to drugie dla pobierania
+raportu z aplikacji webowej.
+"""
+import io
 import os
 import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.styles import Font, PatternFill, Alignment
-import io
 
 # Eksport wyczyszczonych danych + raportu jakosci do Excela 
 

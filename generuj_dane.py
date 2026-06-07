@@ -1,4 +1,15 @@
-import csv, random, os
+"""
+Generator przykladowych (brudnych) danych sprzedazowych FMCG.
+
+Tworzy syntetyczne pliki CSV z kontrolowana liczba bledow w 9 kategoriach
+(daty, ceny, ilosci, literowki, duplikaty itd.) - czysty zestaw demonstracyjny
+dla narzedzia czyszczacego. Stale ziarno losowosci -> powtarzalny wynik.
+"""
+
+import csv
+import random
+import os
+
 random.seed(42)
 
 regiony_clean = ["Wielkopolska", "Mazowieckie", "Malopolska", "Dolnoslaskie", "Pomorskie"]

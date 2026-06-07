@@ -1,3 +1,10 @@
+"""
+Interfejs webowy (Streamlit) narzedzia do czyszczenia raportow FMCG.
+
+Uzytkownik wgrywa surowe pliki CSV, widzi raport jakosci danych (co i ile
+naprawiono, auto-poprawki do sprawdzenia, wartosci do recznej poprawy) i
+pobiera gotowy raport Excel. Logika czyszczenia i eksportu w osobnych modulach.
+"""
 import streamlit as st
 import pandas as pd
 from czyszczenie import wyczysc_dane

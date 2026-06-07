@@ -1,3 +1,11 @@
+"""
+Silnik czyszczenia danych sprzedazowych FMCG.
+
+Wczytuje surowe pliki CSV (z folderu lub z uploadu), naprawia typowe bledy
+(daty w roznych formatach, liczby jako tekst, ujemne ilosci, literowki nazw,
+duplikaty, niezgodne wartosci) i zwraca czysty DataFrame wraz z raportem
+jakosci. Logika jest niezalezna od formatu wyjscia i od interfejsu.
+"""
 import pandas as pd
 import glob
 import os

@@ -1,12 +1,15 @@
+"""
+Generator zestawu TESTOWEGO (dane_test/) z przypadkami brzegowymi.
+
+W odroznieniu od generuj_dane.py zawiera literowke, ktora warstwa fuzzy
+auto-poprawi, oraz nieznane wartosci (nowy region, nowy produkt), ktore
+narzedzie zostawi do recznej weryfikacji. Sluzy do demonstracji fuzzy.
+"""
 import csv
 import random
 import os
 
-# Generator ZESTAWU TESTOWEGO (dane_test/). W przeciwienstwie do generuj_dane.py
-# (czysty przyklad demo) ten zestaw zawiera przypadki brzegowe pokazujace
-# warstwe fuzzy: literowke, ktora narzedzie AUTO-poprawi, oraz nieznane
-# wartosci, ktore ZOSTAWI do recznej weryfikacji.
-random.seed(2024)  # inny seed niz generuj_dane.py -> inny zestaw danych
+random.seed(2024)  # inny seed niz generuj_dane.py 
 
 REGIONY = ["Wielkopolska", "Mazowieckie", "Malopolska", "Dolnoslaskie", "Pomorskie"]
 REGIONY_DIRTY = {
