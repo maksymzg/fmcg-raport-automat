@@ -265,3 +265,5 @@ if __name__ == "__main__":
     print(f"Sprzedawcy uzupelnieni: {raport['sprzedawca_brak']}, wartosci przeliczone: {raport['wartosc_niezgodna']}")
     nierozp = raport["region_nierozpoznane"] + raport["produkt_nierozpoznane"]
     print(f"Do recznej poprawy: {len(nierozp)} wartosci")
+    fuzzy = raport["region_fuzzy"] + raport["produkt_fuzzy"]
+    print(f"Auto-poprawki fuzzy: {len(fuzzy)} wartosci")
