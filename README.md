@@ -40,12 +40,18 @@ danych, a nie deklaratywny.
 2. **Czyszczenie** - daty (3 formaty → jeden typ `datetime`), liczby (cena, ilość),
    standaryzacja regionów i produktów, uzupełnienie sprzedawców, przeliczenie
    wartości.
-3. **Flagowanie duplikatów** - potencjalne powtórki są oznaczane do weryfikacji,
+3. **Dopasowanie rozmyte (fuzzy)** - literówki w nazwach regionów/produktów
+   (np. `mazowiekcie`) są automatycznie poprawiane na podstawie podobieństwa do
+   znanej listy (rapidfuzz, próg dobrany na danych). Auto-poprawki są raportowane
+   **osobno do audytu** - to zgadywanie, więc człowiek może je zweryfikować lub
+   cofnąć. Wartości poniżej progu (naprawdę nowe nazwy) trafiają do ręcznej poprawy.
+4. **Flagowanie duplikatów** - potencjalne powtórki są oznaczane do weryfikacji,
    a **nie** usuwane (patrz: Założenia i ograniczenia).
-4. **Raport jakości** - co i ile zostało naprawione, z rozbiciem na kategorie,
+5. **Raport jakości** - co i ile zostało naprawione, z rozbiciem na kategorie,
    plus lista nierozpoznanych wartości z namiarem na plik i instrukcją poprawy.
-5. **Eksport do Excela** - sformatowany skoroszyt z czterema zakładkami:
-   czyste dane, podsumowanie sprzedaży, raport jakości i lista do poprawienia.
+6. **Eksport do Excela** - sformatowany skoroszyt z pięcioma zakładkami: czyste
+   dane, podsumowanie sprzedaży, raport jakości, lista do poprawienia i
+   auto-poprawki fuzzy do sprawdzenia.
 
 ## Uruchomienie
 
@@ -66,17 +72,20 @@ pobierz gotowy raport Excel.
 ```bash
 python czyszczenie.py        # wypisuje podsumowanie napraw
 python eksport_excel.py      # generuje raporty/raport_sprzedaz.xlsx
-python generuj_dane.py       # (opcjonalnie) świeży zestaw danych testowych
+python generuj_dane.py       # (opcjonalnie) świeży zestaw danych demo
+python generuj_dane_test.py  # (opcjonalnie) zestaw z literówkami - demo fuzzy
 ```
 
 ## Struktura
 ```bash
 fmcg-raport-automat/
-├── dane_surowe/        # przykładowe brudne pliki CSV
-├── generuj_dane.py     # generator danych testowych (z kontrolowanymi błędami)
-├── czyszczenie.py      # silnik czyszczenia (funkcja wyczysc_dane)
-├── eksport_excel.py    # eksport do Excela (na dysk i do pamięci/BytesIO)
-├── app.py              # interfejs webowy (Streamlit)
+├── dane_surowe/          # przykładowy (czysty) zestaw demo - brudne pliki CSV
+├── dane_test/            # zestaw z literówkami i nieznanymi wartościami (demo fuzzy)
+├── generuj_dane.py       # generator zestawu demo (z kontrolowanymi błędami)
+├── generuj_dane_test.py  # generator zestawu testowego (przypadki brzegowe fuzzy)
+├── czyszczenie.py        # silnik czyszczenia (funkcja wyczysc_dane)
+├── eksport_excel.py      # eksport do Excela (na dysk i do pamięci/BytesIO)
+├── app.py                # interfejs webowy (Streamlit)
 ├── requirements.txt
 └── README.md
 ```
@@ -86,7 +95,7 @@ więc można je wywołać z aplikacji webowej, skryptu czy harmonogramu.
 
 ## Stack
 
-Python (pandas, openpyxl), Streamlit. Bez baz danych - celowo lekkie.
+Python (pandas, openpyxl, rapidfuzz), Streamlit. Bez baz danych - celowo lekkie.
 
 ## Założenia i ograniczenia
 
@@ -118,5 +127,5 @@ uzgodniłoby się je z zespołem, który zna źródło danych:
 - [x] Uzupełnienie sprzedawców i przeliczenie wartości
 - [x] Raport jakości danych
 - [x] Eksport do sformatowanego Excela
+- [x] Dopasowanie rozmyte literówek do znanej listy (rapidfuzz) z raportem auto-poprawek
 - [x] Interfejs webowy (Streamlit) + wdrożenie w chmurze
-- [ ] Dopasowanie rozmyte literówek do znanej listy (rapidfuzz)
