@@ -16,6 +16,7 @@ TYTUL_FONT = Font(name="Arial", bold=True, size=12)
 
 
 def _zbuduj_jakosc(raport):
+    fuzzy_n = len(raport.get("region_fuzzy", [])) + len(raport.get("produkt_fuzzy", []))
     wiersze = [
         ("Daty znormalizowane (inny format)", raport["daty_przeksztalcone"], "Sprowadzone do jednego formatu"),
         ("Daty niesparsowane", raport["daty_niesparsowane"], "Nie dalo sie odczytac - do sprawdzenia"),
@@ -26,8 +27,28 @@ def _zbuduj_jakosc(raport):
         ("Wartosci przeliczone", raport["wartosc_niezgodna"], "wartosc != ilosc*cena -> przeliczone"),
         ("Wartosci bez ceny", raport["wartosc_bez_ceny"], "Brak ceny -> wartosc pusta"),
         ("Duplikaty do weryfikacji", raport["duplikaty_do_weryfikacji"], "NIE usuniete - sprawdzic recznie"),
+        ("Auto-poprawki fuzzy", fuzzy_n, "Literowki dopasowane automatycznie - sprawdz w zakladce Auto_poprawione"),
     ]
     return pd.DataFrame(wiersze, columns=["Kategoria", "Liczba", "Opis"])
+
+
+def _zbuduj_auto_poprawione(raport):
+    # Lista auto-poprawek fuzzy do AUDYTU przez czlowieka. To zgadywanie
+    # (literowka dopasowana do znanej nazwy), wiec pokazujemy co i z jaka
+    # pewnoscia zostalo zmienione, zeby dalo sie zweryfikowac lub cofnac.
+    wiersze = []
+    for kolumna, klucz in [("region", "region_fuzzy"), ("produkt", "produkt_fuzzy")]:
+        for p in raport.get(klucz, []):
+            wiersze.append({
+                "Kolumna": kolumna,
+                "Bylo": p["wartosc"],
+                "Poprawiono na": p["poprawiono_na"],
+                "Podobienstwo": p["wynik"],
+            })
+    if not wiersze:
+        return pd.DataFrame([{"Kolumna": "-", "Bylo": "(brak)", "Poprawiono na": "-",
+                              "Podobienstwo": "Nic nie auto-poprawiono"}])
+    return pd.DataFrame(wiersze)
 
 
 def _zbuduj_do_poprawienia(raport):
@@ -60,7 +81,6 @@ def eksportuj_do_excela(df, raport, sciezka="raporty/raport_sprzedaz.xlsx"):
     # Gdy sciezka to bufor w pamieci (BytesIO) - pomijamy, bufor nie ma folderu.
     if isinstance(sciezka, str):
         os.makedirs(os.path.dirname(sciezka), exist_ok=True)
-    # ... reszta funkcji bez zmian ...
 
     # agregaty - liczone w pandas (to raport-zrzut, nie model do edycji w Excelu)
     agregaty = {
@@ -76,7 +96,7 @@ def eksportuj_do_excela(df, raport, sciezka="raporty/raport_sprzedaz.xlsx"):
         df[KOLUMNY_DANE].to_excel(writer, sheet_name="Dane", index=False)
         _zbuduj_jakosc(raport).to_excel(writer, sheet_name="Jakosc_danych", index=False)
         _zbuduj_do_poprawienia(raport).to_excel(writer, sheet_name="Do_poprawienia", index=False)
-
+        _zbuduj_auto_poprawione(raport).to_excel(writer, sheet_name="Auto_poprawione", index=False)
     # 2. Formatowanie + zakladka Podsumowanie (openpyxl)
     wb = load_workbook(sciezka)
 
@@ -105,10 +125,9 @@ def eksportuj_do_excela(df, raport, sciezka="raporty/raport_sprzedaz.xlsx"):
                 if not (kom.font and kom.font.bold):
                     kom.font = ZWYKLY_FONT
         _dopasuj_szerokosci(ws)
-    for nazwa in ("Dane", "Jakosc_danych", "Do_poprawienia"):
+    for nazwa in ("Dane", "Jakosc_danych", "Do_poprawienia", "Auto_poprawione"):
         _formatuj_naglowek(wb[nazwa])
 
-    # Dane: format daty i waluty + filtr
     # Dane: format daty i waluty + filtr
     dane = wb["Dane"]
     for wiersz in dane.iter_rows(min_row=2):
