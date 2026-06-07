@@ -62,6 +62,7 @@ if nierozp:
                  f"- otworz plik, znajdz wartosc (Ctrl+F) i popraw.")
 else:
     st.info("Wszystkie wartosci rozpoznane - nic do recznej poprawy.")
+
 # --- Auto-poprawki fuzzy (do sprawdzenia) ---
 fuzzy = raport["region_fuzzy"] + raport["produkt_fuzzy"]
 if fuzzy:
@@ -76,6 +77,7 @@ if fuzzy:
         } for f in fuzzy]),
         width='stretch',
     )
+
 # --- Podglad wyczyszczonych danych ---
 st.subheader("Podglad wyczyszczonych danych")
 st.dataframe(df.head(50), width='stretch')

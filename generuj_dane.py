@@ -38,6 +38,7 @@ produkty_dirty = {
 sprzedawcy = ["Nowak", "Kowalski", "Wisniewski", "Wojcik", "Lewandowska"]
 
 def date_fmt(y, m, d, style):
+    """Zwraca date w jednym z trzech formatow (ISO, DD.MM, DD/MM) wg stylu."""
     if style == 0: return f"{y}-{m:02d}-{d:02d}"
     if style == 1: return f"{d:02d}.{m:02d}.{y}"
     if style == 2: return f"{d:02d}/{m:02d}/{y}"
@@ -47,6 +48,7 @@ error_log = {"duplikaty":0,"ujemna_ilosc":0,"cena_tekst_przecinek":0,
              "literowka_produkt":0,"wartosc_niezgodna":0,"spacje":0}
 
 def make_row(y, m, style):
+    """Tworzy jeden wiersz sprzedazy z losowo wstrzyknietymi bledami (zliczanymi w error_log)."""
     prod_clean = random.choice(list(produkty.keys()))
     cena = produkty[prod_clean]
     ilosc = random.randint(6, 120)            # FMCG -> wieksze ilosci (palety/kartony)
@@ -81,7 +83,7 @@ header = ["data_sprzedazy","region","sprzedawca","produkt","ilosc","cena_jednost
 files = [("2025_01", 2025, 1, 0), ("2025_02", 2025, 2, 1), ("2025_03", 2025, 3, 2)]
 
 os.makedirs("dane_surowe", exist_ok=True)
-# usun stare jubilerskie pliki jesli zostaly
+# Czyszczenie folderu przed generacja, zeby stare pliki nie mieszaly sie z nowymi
 for f in os.listdir("dane_surowe"):
     os.remove(os.path.join("dane_surowe", f))
 

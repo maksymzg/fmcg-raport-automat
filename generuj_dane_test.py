@@ -9,7 +9,7 @@ import csv
 import random
 import os
 
-random.seed(2024)  # inny seed niz generuj_dane.py 
+random.seed(2024)  # inny seed niz generuj_dane.py -> inny zestaw danych
 
 REGIONY = ["Wielkopolska", "Mazowieckie", "Malopolska", "Dolnoslaskie", "Pomorskie"]
 REGIONY_DIRTY = {
@@ -29,10 +29,12 @@ NAGLOWEK = ["data_sprzedazy", "region", "sprzedawca", "produkt",
 
 
 def format_daty(y, m, d, styl):
+    """Zwraca date w jednym z trzech formatow (ISO, DD.MM, DD/MM) wg stylu."""
     return [f"{y}-{m:02d}-{d:02d}", f"{d:02d}.{m:02d}.{y}", f"{d:02d}/{m:02d}/{y}"][styl]
 
 
 def zrob_wiersz(y, m, styl):
+    """Tworzy jeden realistyczny wiersz sprzedazy z typowymi bledami."""
     produkt = random.choice(list(PRODUKTY))
     cena = PRODUKTY[produkt]
     ilosc = random.randint(6, 120)
