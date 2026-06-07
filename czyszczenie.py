@@ -1,6 +1,12 @@
 import pandas as pd
 import glob
 import os
+from rapidfuzz import process, fuzz
+
+# Prog podobienstwa (0-100) dla dopasowania rozmytego literowek. Powyzej progu
+# wartosc jest AUTO-poprawiana; ponizej - trafia do recznej weryfikacji.
+# Dobrany na danych: literowki ~89-92, naprawde nowe nazwy ~41-74 (luka ~85).
+PROG_FUZZY = 85
 
 # Ustalamy ze względu na jakosc danych
 OCZEKIWANE_KOLUMNY = {"data_sprzedazy", "region", "sprzedawca",
@@ -150,27 +156,43 @@ def _normalizuj(seria):
 def standaryzuj_tekst(df, raport, kolumna, mapa, nazwa_w_raporcie):
     znorm = _normalizuj(df[kolumna])
 
-    # Znormalizowane wartosci spoza mapy.
-    maska_nieznane = ~znorm.isin(mapa.keys()) & znorm.notna()
+    # 1. DOPASOWANIE DOKLADNE: znormalizowana wartosc obecna w mapie.
+    docelowa = znorm.map(mapa)
 
-    # Zamiast samej listy wartosci - namiar: dla kazdej nierozpoznanej wartosci
-    # podajemy plik zrodlowy i numery wierszy, zeby analityk trafil do zrodla.
+    # 2. FUZZY: dla wartosci NIE w mapie szukamy najblizszego klucza. Jesli
+    #    podobienstwo >= PROG_FUZZY (literowka) - auto-poprawiamy. Ponizej progu
+    #    (naprawde inna nazwa) - zostawiamy do recznej weryfikacji w kroku 3.
+    #    Auto-poprawki raportujemy osobno, bo to ZGADYWANIE - czlowiek ma moc je
+    #    skontrolowac.
+    klucze = list(mapa.keys())
+    fuzzy_poprawki, mapa_fuzzy = [], {}
+    niedopasowane = sorted(znorm[docelowa.isna() & znorm.notna()].unique())
+    for wartosc in niedopasowane:
+        klucz, wynik, _ = process.extractOne(wartosc, klucze, scorer=fuzz.ratio)
+        if wynik >= PROG_FUZZY:
+            mapa_fuzzy[wartosc] = mapa[klucz]
+            fuzzy_poprawki.append({"wartosc": wartosc, "poprawiono_na": mapa[klucz],
+                                   "wynik": round(wynik, 1)})
+    if mapa_fuzzy:
+        docelowa = docelowa.fillna(znorm.map(mapa_fuzzy))
+    raport[f"{nazwa_w_raporcie}_fuzzy"] = fuzzy_poprawki
+
+    # 3. NIEROZPOZNANE: wciaz niedopasowane (ani mapa, ani fuzzy) - do reki.
+    maska_nierozp = docelowa.isna() & znorm.notna()
     nierozpoznane = []
-    for wartosc in sorted(znorm[maska_nieznane].unique()):
-        wiersze = df[maska_nieznane & (znorm == wartosc)]
+    for wartosc in sorted(znorm[maska_nierozp].unique()):
+        wiersze = df[maska_nierozp & (znorm == wartosc)]
         for plik, grupa in wiersze.groupby("plik_zrodlowy"):
             nierozpoznane.append({
                 "wartosc": wartosc,
                 "plik": plik,
-                "wiersze": grupa.index.tolist(),  # indeksy w polaczonej tabeli
+                "wiersze": grupa.index.tolist(),
                 "liczba": len(grupa),
             })
     raport[f"{nazwa_w_raporcie}_nierozpoznane"] = nierozpoznane
 
-    # Wlasciwa standaryzacja: .map() zamienia kazda znormalizowana wartosc na
-    # docelowa z mapy. Wartosci spoza mapy daja NaN -> .fillna przywraca
-    # ORYGINAL, zeby niczego nie zgubic (nierozpoznane juz mamy w raporcie).
-    df[kolumna] = znorm.map(mapa).fillna(df[kolumna])
+    # 4. Finalna kolumna: docelowa (mapa + fuzzy), a co zostalo -> ORYGINAL.
+    df[kolumna] = docelowa.fillna(df[kolumna])
     return df
 
 def czysc_sprzedawcow(df, raport):
