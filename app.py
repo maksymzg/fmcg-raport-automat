@@ -67,11 +67,11 @@ if fuzzy:
             "Poprawiono na": f["poprawiono_na"],
             "Podobienstwo": f["wynik"],
         } for f in fuzzy]),
-        use_container_width=True,
+        width='stretch',
     )
 # --- Podglad wyczyszczonych danych ---
 st.subheader("Podglad wyczyszczonych danych")
-st.dataframe(df.head(50), use_container_width=True)
+st.dataframe(df.head(50), width='stretch')
 
 # --- Pobranie raportu Excel ---
 st.subheader("Pobierz raport")
