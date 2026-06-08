@@ -30,10 +30,11 @@ wyeksportowany w innym formacie, z typowymi błędami:
 | Niezgodna wartość | `wartość ≠ ilość × cena` |
 | Nadmiarowe spacje | `"  Nowak "` |
 
-Dane są **syntetyczne i generowane** (`generuj_dane.py`) oraz (`generuj_dane_test.py`) z kontrolowaną liczbą
-błędów w 9 kategoriach. Skrypt raportuje dokładne liczby napraw przy **każdym
-uruchomieniu** - dzięki temu rezultat jest mierzalny i weryfikowalny na konkretnych
-danych, a nie deklaratywny.
+Dane są **syntetyczne i generowane**: `generuj_dane.py` tworzy zestaw demo
+z kontrolowaną liczbą błędów w 9 kategoriach, a `generuj_dane_test.py` tworzy
+zestaw testowy z przypadkami brzegowymi dla warstwy fuzzy. Każdy skrypt raportuje
+dokładne liczby przy **każdym uruchomieniu** - dzięki temu rezultat jest mierzalny
+i weryfikowalny na konkretnych danych, a nie deklaratywny.
 
 ## Jak to działa
 
