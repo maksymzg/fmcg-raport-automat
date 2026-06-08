@@ -1,5 +1,7 @@
 # FMCG – automatyzacja raportu sprzedażowego
 
+*[English version](README.en.md)*
+
 🔗 **Demo na żywo:** https://fmcg-raport-automat-vgeevdu7bdryikyfrmdccx.streamlit.app/
 
 Narzędzie, które bierze surowe, brudne pliki sprzedażowe (takie, jakie realnie
@@ -28,7 +30,7 @@ wyeksportowany w innym formacie, z typowymi błędami:
 | Niezgodna wartość | `wartość ≠ ilość × cena` |
 | Nadmiarowe spacje | `"  Nowak "` |
 
-Dane są **syntetyczne i generowane** (`generuj_dane.py`) z kontrolowaną liczbą
+Dane są **syntetyczne i generowane** (`generuj_dane.py`) oraz (`generuj_dane_test.py`) z kontrolowaną liczbą
 błędów w 9 kategoriach. Skrypt raportuje dokładne liczby napraw przy **każdym
 uruchomieniu** - dzięki temu rezultat jest mierzalny i weryfikowalny na konkretnych
 danych, a nie deklaratywny.
